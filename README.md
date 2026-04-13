@@ -18,6 +18,7 @@ This repository contains a runnable Expo + React Native starter app that impleme
 - `src/mockData.ts` — mock operational data
 - `src/orderLogic.ts` — shared status/date/order helpers
 - `src/auth.tsx` — lightweight auth provider/context for login + logout flow
+- `src/appData.tsx` — app-data provider/context to centralize operational data access + refresh
 - `docs/boost-your-lunch-app-blueprint.md` — product/system blueprint
 
 ## Run locally
@@ -32,7 +33,7 @@ This repository contains a runnable Expo + React Native starter app that impleme
 3. Launch on iOS, Android, or web using Expo CLI prompts.
 
 ## Next implementation targets
-1. Replace `src/mockData.ts` with Supabase queries and mutations.
+1. Replace `src/appData.tsx` mock data source with Supabase queries and mutations.
 2. Add Supabase-backed draft creation/edit APIs.
 3. Add Shopify checkout handoff and store returned order references.
 4. Replace mock auth context with real Supabase auth + session persistence.
