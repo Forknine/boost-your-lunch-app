@@ -1,6 +1,6 @@
 # Boost Your Lunch App (Expo Starter)
 
-This repository contains a runnable Expo + React Native starter app that implements the primary BYL screen map and a refreshed visual style inspired by the public boostyourlunch.com direction.
+This repository contains a runnable Expo + React Native starter app that implements the primary BYL screen map with a dramatic visual refresh: richer BYL-style blue/green palette, elevated cards, stronger contrast, and more modern CTA styling inspired by boostyourlunch.com.
 
 ## What's enhanced in this iteration
 - Shared operational data model stubs (`ChildProfile`, `ScheduledOrderItem`, support threads, announcements)

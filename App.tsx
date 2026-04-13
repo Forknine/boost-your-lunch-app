@@ -19,13 +19,16 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
 const byrTheme = {
-  bg: '#F7F7F4',
+  bg: '#EDF3FF',
+  bgAlt: '#F8FBFF',
   surface: '#FFFFFF',
-  text: '#1E1E1B',
-  muted: '#676767',
-  border: '#E7E7E2',
-  brand: '#0F0F10',
-  highlight: '#8CC63E'
+  text: '#10182E',
+  muted: '#56607A',
+  border: '#D9E4FF',
+  brand: '#1D2B64',
+  brandSecondary: '#3A63FF',
+  highlight: '#90E86A',
+  warning: '#FFB703'
 };
 
 function Screen({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
@@ -65,16 +68,27 @@ function HomeScreen({ navigation }: any) {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.hero}>
-          <Text style={styles.kicker}>Serving students everywhere</Text>
+          <View style={styles.heroAccent} />
+          <Text style={styles.heroKicker}>Serving students everywhere</Text>
           <Text style={styles.heroTitle}>Boost Your Lunch</Text>
           <Text style={styles.heroSubtitle}>School lunches. Handled.</Text>
         </View>
 
-        <Panel title={announcement.title} subtitle={announcement.body} badge={announcement.ctaLabel?.toUpperCase()} />
+        <View style={styles.announcementPanel}>
+          <Panel title={announcement.title} subtitle={announcement.body} badge={announcement.ctaLabel?.toUpperCase()} />
+        </View>
 
-        <View style={styles.twoColumn}>
-          <Panel title="Next Lunch" subtitle={nextOrder ? `${formatDateLabel(nextOrder.serviceDate)} • ${nextOrder.childName}` : 'No upcoming lunches'} />
-          <Panel title="Upcoming" subtitle={`${upcoming.length} active orders`} />
+        <View style={styles.summaryRow}>
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryLabel}>Next Lunch</Text>
+            <Text style={styles.summaryValue}>{nextOrder ? formatDateLabel(nextOrder.serviceDate) : '--'}</Text>
+            <Text style={styles.summaryMeta}>{nextOrder ? nextOrder.childName : 'No upcoming lunches'}</Text>
+          </View>
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryLabel}>Upcoming</Text>
+            <Text style={styles.summaryValue}>{upcoming.length}</Text>
+            <Text style={styles.summaryMeta}>Active orders</Text>
+          </View>
         </View>
 
         <Text style={styles.sectionLabel}>Quick Actions</Text>
@@ -117,7 +131,7 @@ function OrderLunchScreen() {
   return (
     <Screen title="Order Lunch" subtitle="Build a schedule draft before checkout.">
       <Text style={styles.sectionLabel}>1) Choose child</Text>
-      <View style={styles.toggleRow}>
+      <View style={styles.toggleRowWrap}>
         {children.map((child) => (
           <TouchableOpacity
             key={child.id}
@@ -154,7 +168,7 @@ function OrderLunchScreen() {
       <Panel
         title="Draft Review"
         subtitle={`${selectedChild?.firstName ?? 'Child'} • ${selectedProgram} • ${selectedDates.length} date(s) selected`}
-        badge="Ready"
+        badge="READY"
       />
       <TouchableOpacity style={styles.primaryAction}>
         <Text style={styles.primaryActionText}>Proceed to Checkout</Text>
@@ -240,7 +254,7 @@ function PastOrdersScreen() {
           key={order.id}
           title={`${order.childName} • ${formatDateLabel(order.serviceDate)}`}
           subtitle={`${order.program} • ${order.menuItem}`}
-          badge={toUserStatus(order)}
+          badge={toUserStatus(order).toUpperCase()}
         />
       ))}
     </Screen>
@@ -270,7 +284,7 @@ function SupportScreen() {
           key={thread.id}
           title={thread.subject}
           subtitle={`${thread.category} • Updated ${thread.updatedAt}`}
-          badge={thread.unread ? 'Unread' : 'Open'}
+          badge={thread.unread ? 'UNREAD' : 'OPEN'}
         />
       ))}
     </Screen>
@@ -298,17 +312,17 @@ function SettingsScreen() {
           <Text style={styles.panelTitle}>Morning-of reminder</Text>
           <Text style={styles.panelSubtitle}>Send a notification on lunch days</Text>
         </View>
-        <Switch value={morningReminder} onValueChange={setMorningReminder} trackColor={{ true: '#BFE48A' }} thumbColor={morningReminder ? '#4F7F19' : '#C5C5C5'} />
+        <Switch value={morningReminder} onValueChange={setMorningReminder} trackColor={{ true: '#C6F4A6' }} thumbColor={morningReminder ? '#3A63FF' : '#C5C5C5'} />
       </View>
       <View style={styles.settingsRow}>
         <View>
           <Text style={styles.panelTitle}>Ordering deadline reminder</Text>
           <Text style={styles.panelSubtitle}>Notify before nightly cutoff time</Text>
         </View>
-        <Switch value={deadlineReminder} onValueChange={setDeadlineReminder} trackColor={{ true: '#BFE48A' }} thumbColor={deadlineReminder ? '#4F7F19' : '#C5C5C5'} />
+        <Switch value={deadlineReminder} onValueChange={setDeadlineReminder} trackColor={{ true: '#C6F4A6' }} thumbColor={deadlineReminder ? '#3A63FF' : '#C5C5C5'} />
       </View>
       <Panel title="Linked Account" subtitle="Shopify customer connected" />
-      <Panel title="App Version" subtitle="0.3.0" />
+      <Panel title="App Version" subtitle="0.4.0" />
     </Screen>
   );
 }
@@ -330,7 +344,7 @@ function OrderDetailScreen({ route }: any) {
       <Panel title="Service Date" subtitle={formatDateLabel(order.serviceDate)} />
       <Panel title="Program" subtitle={order.program} />
       <Panel title="Item" subtitle={order.menuItem} />
-      <Panel title="Status" subtitle={toUserStatus(order)} badge={order.status === 'Editable' ? 'Can Modify' : 'Locked'} />
+      <Panel title="Status" subtitle={toUserStatus(order)} badge={order.status === 'Editable' ? 'CAN MODIFY' : 'LOCKED'} />
       <Panel title="Shopify Reference" subtitle={order.shopifyOrderRef ?? 'Pending'} />
     </Screen>
   );
@@ -365,13 +379,14 @@ function MainTabs() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: byrTheme.surface,
-          borderTopColor: byrTheme.border,
-          height: 64,
-          paddingBottom: 8,
+          borderTopColor: '#CFE0FF',
+          borderTopWidth: 1,
+          height: 72,
+          paddingBottom: 10,
           paddingTop: 8
         },
-        tabBarActiveTintColor: byrTheme.brand,
-        tabBarInactiveTintColor: '#8C8C8C'
+        tabBarActiveTintColor: byrTheme.brandSecondary,
+        tabBarInactiveTintColor: '#7A89A6'
       }}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
@@ -389,11 +404,11 @@ function MainTabs() {
 export default function App() {
   return (
     <NavigationContainer>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <Stack.Navigator
         screenOptions={{
-          headerStyle: { backgroundColor: byrTheme.surface },
-          headerTintColor: byrTheme.text,
+          headerStyle: { backgroundColor: byrTheme.brand },
+          headerTintColor: '#FFFFFF',
           headerTitleStyle: { fontWeight: '700' }
         }}
       >
@@ -412,42 +427,103 @@ const styles = StyleSheet.create({
   },
   container: {
     padding: 16,
-    gap: 12
+    gap: 14,
+    paddingBottom: 28
   },
   hero: {
-    backgroundColor: byrTheme.surface,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: byrTheme.border,
-    padding: 16
+    backgroundColor: byrTheme.brand,
+    borderRadius: 24,
+    padding: 18,
+    overflow: 'hidden',
+    shadowColor: '#1D2B64',
+    shadowOpacity: 0.32,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8
+  },
+  heroAccent: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 999,
+    backgroundColor: '#4D7BFF',
+    top: -60,
+    right: -50,
+    opacity: 0.4
+  },
+  heroKicker: {
+    textTransform: 'uppercase',
+    fontSize: 11,
+    letterSpacing: 1,
+    fontWeight: '700',
+    color: '#C9D9FF'
   },
   heroTitle: {
+    marginTop: 6,
     fontSize: 30,
     fontWeight: '800',
-    color: byrTheme.text,
+    color: '#FFFFFF',
     letterSpacing: -0.4
   },
   heroSubtitle: {
     marginTop: 4,
-    color: byrTheme.muted,
+    color: '#D7E2FF',
     fontSize: 16
+  },
+  announcementPanel: {
+    backgroundColor: '#DDF1CF',
+    borderRadius: 20,
+    padding: 3
+  },
+  summaryRow: {
+    gap: 10
+  },
+  summaryCard: {
+    backgroundColor: byrTheme.surface,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: byrTheme.border,
+    padding: 14,
+    shadowColor: '#2E4FAE',
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3
+  },
+  summaryLabel: {
+    color: byrTheme.muted,
+    fontWeight: '700',
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 1
+  },
+  summaryValue: {
+    marginTop: 6,
+    fontSize: 30,
+    color: byrTheme.brand,
+    fontWeight: '800'
+  },
+  summaryMeta: {
+    marginTop: 2,
+    color: byrTheme.muted,
+    fontSize: 13
+  },
+  pageHeader: {
+    marginBottom: 2
   },
   kicker: {
     textTransform: 'uppercase',
     fontSize: 11,
     letterSpacing: 1,
     fontWeight: '700',
-    color: byrTheme.muted,
-    marginBottom: 4
-  },
-  pageHeader: {
+    color: '#5772BF',
     marginBottom: 4
   },
   screenTitle: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: '800',
     color: byrTheme.text,
-    letterSpacing: -0.4
+    letterSpacing: -0.6
   },
   screenSubtitle: {
     marginTop: 4,
@@ -460,14 +536,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1,
-    color: byrTheme.muted,
+    color: '#385CBF',
     fontWeight: '700'
   },
   primaryAction: {
-    borderRadius: 999,
-    backgroundColor: byrTheme.brand,
+    borderRadius: 16,
+    backgroundColor: byrTheme.brandSecondary,
     paddingVertical: 15,
-    paddingHorizontal: 16
+    paddingHorizontal: 16,
+    shadowColor: '#3A63FF',
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 6
   },
   primaryActionText: {
     color: '#FFFFFF',
@@ -475,15 +556,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center'
   },
-  twoColumn: {
-    gap: 12
-  },
   panel: {
     backgroundColor: byrTheme.surface,
     borderRadius: 18,
     borderWidth: 1,
     borderColor: byrTheme.border,
-    padding: 14
+    padding: 14,
+    shadowColor: '#2F4EA5',
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2
   },
   panelTopRow: {
     flexDirection: 'row',
@@ -504,29 +587,30 @@ const styles = StyleSheet.create({
     lineHeight: 20
   },
   badge: {
-    backgroundColor: '#EFF8E1',
-    color: '#4F7F19',
-    fontSize: 11,
+    backgroundColor: '#1D2B64',
+    color: '#FFFFFF',
+    fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 0.7,
+    letterSpacing: 0.8,
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: 999,
     overflow: 'hidden'
   },
   datePill: {
     borderRadius: 999,
+    backgroundColor: '#ECF2FF',
     borderWidth: 1,
-    borderColor: byrTheme.border,
+    borderColor: '#BFD0FF',
     paddingHorizontal: 8,
     paddingVertical: 4,
     fontSize: 12,
-    color: byrTheme.text,
-    fontWeight: '600'
+    color: '#2440A4',
+    fontWeight: '700'
   },
   metaStatus: {
     marginTop: 10,
-    color: byrTheme.highlight,
+    color: '#5C9B2E',
     fontWeight: '700',
     fontSize: 13
   },
@@ -542,11 +626,11 @@ const styles = StyleSheet.create({
   toggleButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: byrTheme.border,
-    borderRadius: 999,
+    borderColor: '#C6D6FF',
+    borderRadius: 14,
     paddingVertical: 10,
     alignItems: 'center',
-    backgroundColor: byrTheme.surface
+    backgroundColor: '#FFFFFF'
   },
   toggleButtonActive: {
     backgroundColor: byrTheme.brand,
@@ -561,29 +645,29 @@ const styles = StyleSheet.create({
   },
   filterChip: {
     borderWidth: 1,
-    borderColor: byrTheme.border,
+    borderColor: '#C9D8FF',
     borderRadius: 999,
-    paddingVertical: 6,
+    paddingVertical: 7,
     paddingHorizontal: 12,
-    backgroundColor: byrTheme.surface
+    backgroundColor: '#FFFFFF'
   },
   filterChipActive: {
-    borderColor: byrTheme.highlight,
-    backgroundColor: '#F3FADF'
+    borderColor: byrTheme.brandSecondary,
+    backgroundColor: '#E8EEFF'
   },
   filterChipText: {
-    color: byrTheme.text,
+    color: '#223A8B',
     fontSize: 13,
     fontWeight: '600'
   },
   filterChipTextActive: {
-    color: '#416A14'
+    color: '#1A2A61'
   },
   calendarLine: {
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: byrTheme.border
+    borderTopColor: '#E4EBFF'
   },
   calendarLineText: {
     color: byrTheme.text,
@@ -603,6 +687,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8
+    gap: 8,
+    shadowColor: '#3A63FF',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2
   }
 });
