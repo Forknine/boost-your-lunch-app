@@ -1,5 +1,5 @@
 import { announcement, children, notificationLog, programs, scheduledOrders, serviceDates, supportThreads } from '../mockData';
-import { AppRepository, DraftInput, SupportThreadInput } from './repository';
+import { AppRepository, ChildInput, DraftInput, SupportThreadInput } from './repository';
 
 export class MockRepository implements AppRepository {
   async fetchBundle() {
@@ -36,6 +36,12 @@ export class MockRepository implements AppRepository {
       minute: '2-digit'
     });
     return { threadId: `thr_${random}`, updatedAt };
+  }
+
+  async createChild(_input: ChildInput) {
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    const random = Math.floor(Math.random() * 9000) + 1000;
+    return { childId: `child_${random}` };
   }
 
   async updateNotificationPreferences(input: { morningReminder: boolean; cutoffReminder: boolean }) {

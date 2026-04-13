@@ -22,10 +22,20 @@ export type SupportThreadInput = {
   subject: string;
 };
 
+export type ChildInput = {
+  firstName: string;
+  lastName?: string;
+  school: string;
+  classroom: string;
+  grade: string;
+  notes?: string;
+};
+
 export interface AppRepository {
   fetchBundle(): Promise<AppDataBundle>;
   createDraft(input: DraftInput): Promise<{ draftId: string }>;
   createSupportThread(input: SupportThreadInput): Promise<{ threadId: string; updatedAt: string }>;
+  createChild(input: ChildInput): Promise<{ childId: string }>;
   updateNotificationPreferences(input: NotificationPreferences): Promise<NotificationPreferences>;
   markNotificationRead(notificationId: string): Promise<void>;
   updateChildStatus(childId: string, active: boolean): Promise<{ childId: string; active: boolean }>;

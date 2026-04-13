@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 import { AppAnnouncement, ChildProfile, NotificationItem, NotificationPreferences, ScheduledOrderItem, SupportThread } from './models';
-import { DraftInput, SupportThreadInput } from './data/repository';
+import { ChildInput, DraftInput, SupportThreadInput } from './data/repository';
 import { MockRepository } from './data/mockRepository';
 import { SupabaseRepository } from './data/supabaseRepository';
 
@@ -23,6 +23,7 @@ type AppDataContextValue = {
   refresh: () => Promise<void>;
   createDraft: (input: DraftInput) => Promise<{ draftId: string }>;
   createSupportThread: (input: SupportThreadInput) => Promise<{ threadId: string }>;
+  createChild: (input: ChildInput) => Promise<{ childId: string }>;
   updateNotificationPreferences: (input: NotificationPreferences) => Promise<void>;
   markNotificationRead: (notificationId: string) => Promise<void>;
   updateChildStatus: (childId: string, active: boolean) => Promise<void>;
@@ -77,6 +78,27 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     return { threadId: created.threadId };
   }, []);
 
+  const createChild = useCallback(async (input: ChildInput) => {
+    const created = await repo.createChild(input);
+    setData((prev) => ({
+      ...prev,
+      children: [
+        {
+          id: created.childId,
+          firstName: input.firstName.trim(),
+          lastName: input.lastName?.trim() || undefined,
+          school: input.school.trim(),
+          classroom: input.classroom.trim(),
+          grade: input.grade.trim(),
+          notes: input.notes?.trim() || undefined,
+          active: true
+        },
+        ...prev.children
+      ]
+    }));
+    return { childId: created.childId };
+  }, []);
+
   const updateNotificationPreferences = useCallback(async (input: NotificationPreferences) => {
     const updated = await repo.updateNotificationPreferences(input);
     setData((prev) => ({ ...prev, notificationPreferences: updated }));
@@ -99,8 +121,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<AppDataContextValue>(
-    () => ({ data, loading, provider, refresh, createDraft, createSupportThread, updateNotificationPreferences, markNotificationRead, updateChildStatus }),
-    [data, loading, refresh, createDraft, createSupportThread, updateNotificationPreferences, markNotificationRead, updateChildStatus]
+    () => ({ data, loading, provider, refresh, createDraft, createSupportThread, createChild, updateNotificationPreferences, markNotificationRead, updateChildStatus }),
+    [data, loading, refresh, createDraft, createSupportThread, createChild, updateNotificationPreferences, markNotificationRead, updateChildStatus]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

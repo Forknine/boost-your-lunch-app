@@ -304,7 +304,15 @@ function PastOrdersScreen() {
 }
 
 function FamilyScreen({ navigation }: any) {
-  const { data, updateChildStatus } = useAppData();
+  const { data, updateChildStatus, createChild } = useAppData();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [school, setSchool] = useState('');
+  const [classroom, setClassroom] = useState('');
+  const [grade, setGrade] = useState('');
+  const [notes, setNotes] = useState('');
+  const [createdChildId, setCreatedChildId] = useState<string | null>(null);
+  const canCreateChild = Boolean(firstName.trim() && school.trim() && classroom.trim() && grade.trim());
   return (
     <Screen title="My Family" subtitle="Children, school assignments, and notes.">
       {data.children.map((child) => (
@@ -318,7 +326,32 @@ function FamilyScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
       ))}
-      <Panel title="Add Child" subtitle="Next: connect to full create/edit child form" />
+      <View style={styles.inputCard}>
+        <Text style={styles.inputLabel}>Add Child</Text>
+        <TextInput value={firstName} onChangeText={setFirstName} placeholder="First Name" placeholderTextColor="#8EA1CE" style={styles.input} />
+        <TextInput value={lastName} onChangeText={setLastName} placeholder="Last Name (optional)" placeholderTextColor="#8EA1CE" style={styles.input} />
+        <TextInput value={school} onChangeText={setSchool} placeholder="School" placeholderTextColor="#8EA1CE" style={styles.input} />
+        <TextInput value={classroom} onChangeText={setClassroom} placeholder="Classroom" placeholderTextColor="#8EA1CE" style={styles.input} />
+        <TextInput value={grade} onChangeText={setGrade} placeholder="Grade (e.g., 3)" placeholderTextColor="#8EA1CE" style={styles.input} />
+        <TextInput value={notes} onChangeText={setNotes} placeholder="Notes (allergies, pickup details)" placeholderTextColor="#8EA1CE" style={[styles.input, styles.multilineInput]} multiline />
+        {createdChildId ? <Panel title="Child Added" subtitle={`Profile created as ${createdChildId}`} badge="SAVED" /> : null}
+        <TouchableOpacity
+          style={[styles.primaryAction, !canCreateChild && styles.disabledAction]}
+          disabled={!canCreateChild}
+          onPress={async () => {
+            const result = await createChild({ firstName, lastName, school, classroom, grade, notes });
+            setCreatedChildId(result.childId);
+            setFirstName('');
+            setLastName('');
+            setSchool('');
+            setClassroom('');
+            setGrade('');
+            setNotes('');
+          }}
+        >
+          <Text style={styles.primaryActionText}>Save Child Profile</Text>
+        </TouchableOpacity>
+      </View>
     </Screen>
   );
 }
@@ -474,6 +507,7 @@ const styles = StyleSheet.create({
   inputCard: { backgroundColor: '#FFFFFF', borderRadius: 18, borderWidth: 1, borderColor: byrTheme.border, padding: 14, gap: 8 },
   inputLabel: { color: byrTheme.muted, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
   input: { borderWidth: 1, borderColor: '#C9D8FF', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, color: byrTheme.text, backgroundColor: byrTheme.bgAlt },
+  multilineInput: { minHeight: 70, textAlignVertical: 'top' },
   hero: { backgroundColor: byrTheme.brand, borderRadius: 24, padding: 18, overflow: 'hidden', shadowColor: '#1D2B64', shadowOpacity: 0.32, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 8 },
   heroAccent: { position: 'absolute', width: 180, height: 180, borderRadius: 999, backgroundColor: '#4D7BFF', top: -60, right: -50, opacity: 0.4 },
   heroKicker: { textTransform: 'uppercase', fontSize: 11, letterSpacing: 1, fontWeight: '700', color: '#C9D9FF' },
