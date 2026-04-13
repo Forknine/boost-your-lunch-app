@@ -7,6 +7,10 @@ export const announcement: AppAnnouncement = {
   ctaLabel: 'Order now'
 };
 
+export const programs = ['Hot Lunch', 'Pizza Friday', 'Special Menu'];
+
+export const serviceDates = ['2026-04-16', '2026-04-17', '2026-04-20', '2026-04-21'];
+
 export const children: ChildProfile[] = [
   {
     id: 'child_mia',
@@ -94,4 +98,10 @@ export const supportThreads: SupportThread[] = [
     updatedAt: '2026-04-12 04:47 PM',
     unread: false
   }
+];
+
+export const notificationLog = [
+  'Order confirmed for Mia on Apr 16',
+  'Ordering closes tonight at 8:00 PM',
+  'Support replied to your request'
 ];

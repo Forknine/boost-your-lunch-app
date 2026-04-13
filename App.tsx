@@ -5,8 +5,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaView, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
-import { announcement, children, scheduledOrders, supportThreads } from './src/mockData';
+import { announcement, children, notificationLog, programs, scheduledOrders, serviceDates, supportThreads } from './src/mockData';
 import { ScheduledOrderItem } from './src/models';
+import { formatDateLabel, getPastOrders, getUpcomingOrders, toUserStatus } from './src/orderLogic';
 
 type RootStackParamList = {
   Main: undefined;
@@ -26,11 +27,6 @@ const byrTheme = {
   brand: '#0F0F10',
   highlight: '#8CC63E'
 };
-
-function formatDate(dateString: string) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
 
 function Screen({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
@@ -60,8 +56,8 @@ function Panel({ title, subtitle, badge }: { title: string; subtitle?: string; b
 }
 
 function HomeScreen({ navigation }: any) {
-  const upcoming = scheduledOrders.filter((order) => ['Editable', 'Locked', 'Confirmed'].includes(order.status));
-  const nextOrder = [...upcoming].sort((a, b) => a.serviceDate.localeCompare(b.serviceDate))[0];
+  const upcoming = getUpcomingOrders(scheduledOrders);
+  const nextOrder = upcoming[0];
 
   const quickActions = ['Order Lunch', 'Upcoming Orders', 'Past Orders', 'My Family', 'Support'];
 
@@ -77,7 +73,7 @@ function HomeScreen({ navigation }: any) {
         <Panel title={announcement.title} subtitle={announcement.body} badge={announcement.ctaLabel?.toUpperCase()} />
 
         <View style={styles.twoColumn}>
-          <Panel title="Next Lunch" subtitle={nextOrder ? `${formatDate(nextOrder.serviceDate)} • ${nextOrder.childName}` : 'No upcoming lunches'} />
+          <Panel title="Next Lunch" subtitle={nextOrder ? `${formatDateLabel(nextOrder.serviceDate)} • ${nextOrder.childName}` : 'No upcoming lunches'} />
           <Panel title="Upcoming" subtitle={`${upcoming.length} active orders`} />
         </View>
 
@@ -103,13 +99,66 @@ function HomeScreen({ navigation }: any) {
 }
 
 function OrderLunchScreen() {
+  const [selectedChildId, setSelectedChildId] = useState(children[0]?.id ?? '');
+  const [selectedProgram, setSelectedProgram] = useState(programs[0]);
+  const [selectedDates, setSelectedDates] = useState<string[]>([serviceDates[0]]);
+
+  const selectedChild = children.find((child) => child.id === selectedChildId);
+
+  const toggleDate = (date: string) => {
+    setSelectedDates((prev) => {
+      if (prev.includes(date)) {
+        return prev.length === 1 ? prev : prev.filter((d) => d !== date);
+      }
+      return [...prev, date];
+    });
+  };
+
   return (
-    <Screen title="Order Lunch" subtitle="Supabase-first scheduling flow, then Shopify checkout.">
-      <Panel title="Step 1" subtitle="Select child + school context" />
-      <Panel title="Step 2" subtitle="Select program and service dates" />
-      <Panel title="Step 3" subtitle="Choose menu items and modifiers" />
-      <Panel title="Step 4" subtitle="Validate cutoffs and availability" />
-      <Panel title="Step 5" subtitle="Checkout and payment via Shopify" />
+    <Screen title="Order Lunch" subtitle="Build a schedule draft before checkout.">
+      <Text style={styles.sectionLabel}>1) Choose child</Text>
+      <View style={styles.toggleRow}>
+        {children.map((child) => (
+          <TouchableOpacity
+            key={child.id}
+            style={[styles.filterChip, selectedChildId === child.id && styles.filterChipActive]}
+            onPress={() => setSelectedChildId(child.id)}
+          >
+            <Text style={[styles.filterChipText, selectedChildId === child.id && styles.filterChipTextActive]}>{child.firstName}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Text style={styles.sectionLabel}>2) Program</Text>
+      <View style={styles.toggleRowWrap}>
+        {programs.map((program) => (
+          <TouchableOpacity
+            key={program}
+            style={[styles.filterChip, selectedProgram === program && styles.filterChipActive]}
+            onPress={() => setSelectedProgram(program)}
+          >
+            <Text style={[styles.filterChipText, selectedProgram === program && styles.filterChipTextActive]}>{program}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Text style={styles.sectionLabel}>3) Service dates</Text>
+      <View style={styles.toggleRowWrap}>
+        {serviceDates.map((date) => (
+          <TouchableOpacity key={date} style={[styles.filterChip, selectedDates.includes(date) && styles.filterChipActive]} onPress={() => toggleDate(date)}>
+            <Text style={[styles.filterChipText, selectedDates.includes(date) && styles.filterChipTextActive]}>{formatDateLabel(date)}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Panel
+        title="Draft Review"
+        subtitle={`${selectedChild?.firstName ?? 'Child'} • ${selectedProgram} • ${selectedDates.length} date(s) selected`}
+        badge="Ready"
+      />
+      <TouchableOpacity style={styles.primaryAction}>
+        <Text style={styles.primaryActionText}>Proceed to Checkout</Text>
+      </TouchableOpacity>
     </Screen>
   );
 }
@@ -118,7 +167,7 @@ function UpcomingOrdersScreen({ navigation }: any) {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Editable' | 'Locked'>('All');
 
-  const orders = scheduledOrders.filter((order) => ['Editable', 'Locked', 'Confirmed'].includes(order.status));
+  const orders = getUpcomingOrders(scheduledOrders);
   const filteredOrders = orders.filter((order) => (statusFilter === 'All' ? true : order.status === statusFilter));
 
   const groupedByDate = useMemo(() => {
@@ -139,7 +188,7 @@ function UpcomingOrdersScreen({ navigation }: any) {
         ))}
       </View>
 
-      <View style={styles.toggleRow}>
+      <View style={styles.toggleRowWrap}>
         {(['All', 'Editable', 'Locked'] as const).map((status) => (
           <TouchableOpacity
             key={status}
@@ -156,10 +205,10 @@ function UpcomingOrdersScreen({ navigation }: any) {
           <TouchableOpacity key={row.id} style={styles.panel} onPress={() => navigation.getParent()?.navigate('OrderDetail', { orderId: row.id })}>
             <View style={styles.panelTopRow}>
               <Text style={styles.panelTitle}>{row.childName}</Text>
-              <Text style={styles.datePill}>{formatDate(row.serviceDate)}</Text>
+              <Text style={styles.datePill}>{formatDateLabel(row.serviceDate)}</Text>
             </View>
             <Text style={styles.panelSubtitle}>{`${row.program} • ${row.menuItem}`}</Text>
-            <Text style={styles.metaStatus}>{row.status}</Text>
+            <Text style={styles.metaStatus}>{toUserStatus(row)}</Text>
           </TouchableOpacity>
         ))}
 
@@ -168,11 +217,11 @@ function UpcomingOrdersScreen({ navigation }: any) {
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([date, rows]) => (
             <View key={date} style={styles.panel}>
-              <Text style={styles.panelTitle}>{formatDate(date)}</Text>
+              <Text style={styles.panelTitle}>{formatDateLabel(date)}</Text>
               {rows.map((row) => (
                 <TouchableOpacity key={row.id} style={styles.calendarLine} onPress={() => navigation.getParent()?.navigate('OrderDetail', { orderId: row.id })}>
                   <Text style={styles.calendarLineText}>{`${row.childName} • ${row.menuItem}`}</Text>
-                  <Text style={styles.calendarLineMeta}>{row.status}</Text>
+                  <Text style={styles.calendarLineMeta}>{toUserStatus(row)}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -182,16 +231,16 @@ function UpcomingOrdersScreen({ navigation }: any) {
 }
 
 function PastOrdersScreen() {
-  const past = scheduledOrders.filter((order) => ['Fulfilled', 'Cancelled', 'Refunded'].includes(order.status));
+  const past = getPastOrders(scheduledOrders);
 
   return (
     <Screen title="Past Orders" subtitle="Completed and cancelled history.">
       {past.map((order) => (
         <Panel
           key={order.id}
-          title={`${order.childName} • ${formatDate(order.serviceDate)}`}
+          title={`${order.childName} • ${formatDateLabel(order.serviceDate)}`}
           subtitle={`${order.program} • ${order.menuItem}`}
-          badge={order.status}
+          badge={toUserStatus(order)}
         />
       ))}
     </Screen>
@@ -207,7 +256,7 @@ function FamilyScreen({ navigation }: any) {
           <Text style={styles.panelSubtitle}>{`${child.school} • ${child.classroom} • Grade ${child.grade}`}</Text>
         </TouchableOpacity>
       ))}
-      <Panel title="Add Child" subtitle="MVP: connect to child create form in next iteration" />
+      <Panel title="Add Child" subtitle="Next: connect to full create/edit child form" />
     </Screen>
   );
 }
@@ -231,9 +280,9 @@ function SupportScreen() {
 function NotificationsScreen() {
   return (
     <Screen title="Notifications" subtitle="In-app message log for all push events.">
-      <Panel title="Order Confirmed" subtitle="2 lunches confirmed for Mia • 9:04 AM" />
-      <Panel title="Reminder" subtitle="Ordering closes tonight • 3:00 PM" />
-      <Panel title="Support Reply" subtitle="Your request has a new response • 4:12 PM" />
+      {notificationLog.map((note) => (
+        <Panel key={note} title={note} subtitle="Tap to view details" />
+      ))}
     </Screen>
   );
 }
@@ -259,7 +308,7 @@ function SettingsScreen() {
         <Switch value={deadlineReminder} onValueChange={setDeadlineReminder} trackColor={{ true: '#BFE48A' }} thumbColor={deadlineReminder ? '#4F7F19' : '#C5C5C5'} />
       </View>
       <Panel title="Linked Account" subtitle="Shopify customer connected" />
-      <Panel title="App Version" subtitle="0.2.0" />
+      <Panel title="App Version" subtitle="0.3.0" />
     </Screen>
   );
 }
@@ -278,10 +327,10 @@ function OrderDetailScreen({ route }: any) {
   return (
     <Screen title="Order Detail" subtitle="Backend eligibility controls modify/cancel actions.">
       <Panel title="Child" subtitle={order.childName} />
-      <Panel title="Service Date" subtitle={formatDate(order.serviceDate)} />
+      <Panel title="Service Date" subtitle={formatDateLabel(order.serviceDate)} />
       <Panel title="Program" subtitle={order.program} />
       <Panel title="Item" subtitle={order.menuItem} />
-      <Panel title="Status" subtitle={order.status} badge={order.status === 'Editable' ? 'Can Modify' : 'Locked'} />
+      <Panel title="Status" subtitle={toUserStatus(order)} badge={order.status === 'Editable' ? 'Can Modify' : 'Locked'} />
       <Panel title="Shopify Reference" subtitle={order.shopifyOrderRef ?? 'Pending'} />
     </Screen>
   );
@@ -483,6 +532,11 @@ const styles = StyleSheet.create({
   },
   toggleRow: {
     flexDirection: 'row',
+    gap: 8
+  },
+  toggleRowWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8
   },
   toggleButton: {
