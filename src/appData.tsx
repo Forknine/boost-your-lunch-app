@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 import { AppAnnouncement, ChildProfile, ScheduledOrderItem, SupportThread } from './models';
-import { DraftInput } from './data/repository';
+import { DraftInput, SupportThreadInput } from './data/repository';
 import { MockRepository } from './data/mockRepository';
 import { SupabaseRepository } from './data/supabaseRepository';
 
@@ -21,6 +21,7 @@ type AppDataContextValue = {
   provider: 'mock' | 'supabase';
   refresh: () => Promise<void>;
   createDraft: (input: DraftInput) => Promise<{ draftId: string }>;
+  createSupportThread: (input: SupportThreadInput) => Promise<{ threadId: string }>;
 };
 
 const provider = process.env.EXPO_PUBLIC_DATA_PROVIDER === 'supabase' ? 'supabase' : 'mock';
@@ -53,9 +54,27 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     return repo.createDraft(input);
   }, []);
 
+  const createSupportThread = useCallback(async (input: SupportThreadInput) => {
+    const created = await repo.createSupportThread(input);
+    setData((prev) => ({
+      ...prev,
+      supportThreads: [
+        {
+          id: created.threadId,
+          subject: input.subject,
+          category: input.category,
+          updatedAt: created.updatedAt,
+          unread: false
+        },
+        ...prev.supportThreads
+      ]
+    }));
+    return { threadId: created.threadId };
+  }, []);
+
   const value = useMemo<AppDataContextValue>(
-    () => ({ data, loading, provider, refresh, createDraft }),
-    [data, loading, refresh, createDraft]
+    () => ({ data, loading, provider, refresh, createDraft, createSupportThread }),
+    [data, loading, refresh, createDraft, createSupportThread]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

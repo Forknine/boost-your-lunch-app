@@ -16,7 +16,13 @@ export type DraftInput = {
   serviceDates: string[];
 };
 
+export type SupportThreadInput = {
+  category: 'Order Help' | 'Cancellation/Refund' | 'School Question' | 'App Issue' | 'General';
+  subject: string;
+};
+
 export interface AppRepository {
   fetchBundle(): Promise<AppDataBundle>;
   createDraft(input: DraftInput): Promise<{ draftId: string }>;
+  createSupportThread(input: SupportThreadInput): Promise<{ threadId: string; updatedAt: string }>;
 }

@@ -9,6 +9,7 @@ import { ScheduledOrderItem } from './src/models';
 import { formatDateLabel, getPastOrders, getUpcomingOrders, toUserStatus } from './src/orderLogic';
 import { AuthProvider, useAuth } from './src/auth';
 import { AppDataProvider, useAppData } from './src/appData';
+import { SupportThreadInput } from './src/data/repository';
 
 type RootStackParamList = {
   Main: undefined;
@@ -300,8 +301,47 @@ function FamilyScreen({ navigation }: any) {
 }
 
 function SupportScreen() {
-  const { data } = useAppData();
-  return <Screen title="Support" subtitle="Submit requests and track replies."><Panel title="Create New Request" subtitle="Order Help, Cancellation/Refund, School Question, App Issue, General" />{data.supportThreads.map((thread) => <Panel key={thread.id} title={thread.subject} subtitle={`${thread.category} • Updated ${thread.updatedAt}`} badge={thread.unread ? 'UNREAD' : 'OPEN'} />)}</Screen>;
+  const { data, createSupportThread } = useAppData();
+  const categories: SupportThreadInput['category'][] = ['Order Help', 'Cancellation/Refund', 'School Question', 'App Issue', 'General'];
+  const [category, setCategory] = useState<SupportThreadInput['category']>('Order Help');
+  const [subject, setSubject] = useState('');
+  const [confirmation, setConfirmation] = useState<string | null>(null);
+
+  return (
+    <Screen title="Support" subtitle="Submit requests and track replies.">
+      <View style={styles.inputCard}>
+        <Text style={styles.inputLabel}>Issue Category</Text>
+        <View style={styles.toggleRowWrap}>
+          {categories.map((item) => (
+            <TouchableOpacity key={item} style={[styles.filterChip, category === item && styles.filterChipActive]} onPress={() => setCategory(item)}>
+              <Text style={[styles.filterChipText, category === item && styles.filterChipTextActive]}>{item}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <Text style={styles.inputLabel}>Subject</Text>
+        <TextInput
+          value={subject}
+          onChangeText={setSubject}
+          placeholder="Briefly describe the issue"
+          placeholderTextColor="#8EA1CE"
+          style={styles.input}
+        />
+        <TouchableOpacity
+          style={styles.primaryAction}
+          onPress={async () => {
+            if (!subject.trim()) return;
+            const created = await createSupportThread({ category, subject: subject.trim() });
+            setConfirmation(`Created ticket ${created.threadId}`);
+            setSubject('');
+          }}
+        >
+          <Text style={styles.primaryActionText}>Create Support Request</Text>
+        </TouchableOpacity>
+      </View>
+      {confirmation ? <Panel title="Support Created" subtitle={confirmation} badge="SUCCESS" /> : null}
+      {data.supportThreads.map((thread) => <Panel key={thread.id} title={thread.subject} subtitle={`${thread.category} • Updated ${thread.updatedAt}`} badge={thread.unread ? 'UNREAD' : 'OPEN'} />)}
+    </Screen>
+  );
 }
 
 function NotificationsScreen() {

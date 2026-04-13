@@ -1,4 +1,4 @@
-import { AppDataBundle, AppRepository, DraftInput } from './repository';
+import { AppDataBundle, AppRepository, DraftInput, SupportThreadInput } from './repository';
 
 /**
  * Placeholder repository for future Supabase integration.
@@ -12,5 +12,9 @@ export class SupabaseRepository implements AppRepository {
 
   async createDraft(_input: DraftInput): Promise<{ draftId: string }> {
     throw new Error('SupabaseRepository.createDraft not implemented yet.');
+  }
+
+  async createSupportThread(_input: SupportThreadInput): Promise<{ threadId: string; updatedAt: string }> {
+    throw new Error('SupabaseRepository.createSupportThread not implemented yet.');
   }
 }
