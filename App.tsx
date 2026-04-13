@@ -6,7 +6,7 @@ import { SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, Touchabl
 import { StatusBar } from 'expo-status-bar';
 
 import { ScheduledOrderItem } from './src/models';
-import { formatDateLabel, getPastOrders, getUpcomingOrders, toUserStatus } from './src/orderLogic';
+import { canModifyOrder, editableUntilLabel, formatDateLabel, getPastOrders, getUpcomingOrders, toUserStatus } from './src/orderLogic';
 import { AuthProvider, useAuth } from './src/auth';
 import { AppDataProvider, useAppData } from './src/appData';
 import { SupportThreadInput } from './src/data/repository';
@@ -270,7 +270,7 @@ function UpcomingOrdersScreen({ navigation }: any) {
         <TouchableOpacity key={row.id} style={styles.panel} onPress={() => navigation.getParent()?.navigate('OrderDetail', { orderId: row.id })}>
           <View style={styles.panelTopRow}><Text style={styles.panelTitle}>{row.childName}</Text><Text style={styles.datePill}>{formatDateLabel(row.serviceDate)}</Text></View>
           <Text style={styles.panelSubtitle}>{`${row.program} • ${row.menuItem}`}</Text>
-          <Text style={styles.metaStatus}>{toUserStatus(row)}</Text>
+          <Text style={styles.metaStatus}>{canModifyOrder(row) ? 'Can modify' : 'Locked'}</Text>
         </TouchableOpacity>
       ))}
 
@@ -280,7 +280,7 @@ function UpcomingOrdersScreen({ navigation }: any) {
           {rows.map((row) => (
             <TouchableOpacity key={row.id} style={styles.calendarLine} onPress={() => navigation.getParent()?.navigate('OrderDetail', { orderId: row.id })}>
               <Text style={styles.calendarLineText}>{`${row.childName} • ${row.menuItem}`}</Text>
-              <Text style={styles.calendarLineMeta}>{toUserStatus(row)}</Text>
+              <Text style={styles.calendarLineMeta}>{canModifyOrder(row) ? 'Can modify' : 'Locked'}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -369,7 +369,24 @@ function OrderDetailScreen({ route }: any) {
   const { data } = useAppData();
   const order = data.scheduledOrders.find((item) => item.id === route.params.orderId);
   if (!order) return <Screen title="Order Detail" subtitle="Order not found."><Panel title="Missing order" subtitle="Please go back and select another order." /></Screen>;
-  return <Screen title="Order Detail" subtitle="Backend eligibility controls modify/cancel actions."><Panel title="Child" subtitle={order.childName} /><Panel title="Service Date" subtitle={formatDateLabel(order.serviceDate)} /><Panel title="Program" subtitle={order.program} /><Panel title="Item" subtitle={order.menuItem} /><Panel title="Status" subtitle={toUserStatus(order)} badge={order.status === 'Editable' ? 'CAN MODIFY' : 'LOCKED'} /><Panel title="Shopify Reference" subtitle={order.shopifyOrderRef ?? 'Pending'} /></Screen>;
+  const isEditable = canModifyOrder(order);
+  return (
+    <Screen title="Order Detail" subtitle="Backend eligibility controls modify/cancel actions.">
+      <Panel title="Child" subtitle={order.childName} />
+      <Panel title="Service Date" subtitle={formatDateLabel(order.serviceDate)} />
+      <Panel title="Program" subtitle={order.program} />
+      <Panel title="Item" subtitle={order.menuItem} />
+      <Panel title="Status" subtitle={toUserStatus(order)} badge={isEditable ? 'CAN MODIFY' : 'LOCKED'} />
+      <Panel title="Edit Window" subtitle={editableUntilLabel(order)} />
+      <Panel title="Shopify Reference" subtitle={order.shopifyOrderRef ?? 'Pending'} />
+      <TouchableOpacity style={[styles.primaryAction, !isEditable && styles.disabledAction]}>
+        <Text style={styles.primaryActionText}>{isEditable ? 'Modify Order' : 'Modify Locked'}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={[styles.secondaryAction, !isEditable && styles.disabledAction]}>
+        <Text style={styles.secondaryActionText}>{isEditable ? 'Cancel Order' : 'Cancellation via Support'}</Text>
+      </TouchableOpacity>
+    </Screen>
+  );
 }
 
 function ChildDetailScreen({ route }: any) {
@@ -444,6 +461,7 @@ const styles = StyleSheet.create({
   sectionLabel: { marginTop: 6, marginBottom: 2, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, color: '#385CBF', fontWeight: '700' },
   primaryAction: { borderRadius: 16, backgroundColor: byrTheme.brandSecondary, paddingVertical: 15, paddingHorizontal: 16, shadowColor: '#3A63FF', shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 6 },
   primaryActionText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700', textAlign: 'center' },
+  disabledAction: { opacity: 0.6 },
   secondaryAction: { borderRadius: 12, borderWidth: 1, borderColor: '#C9D8FF', backgroundColor: '#FFFFFF', paddingVertical: 10 },
   secondaryActionText: { textAlign: 'center', color: '#3658B7', fontWeight: '700' },
   panel: { backgroundColor: byrTheme.surface, borderRadius: 18, borderWidth: 1, borderColor: byrTheme.border, padding: 14, shadowColor: '#2F4EA5', shadowOpacity: 0.06, shadowRadius: 14, shadowOffset: { width: 0, height: 4 }, elevation: 2 },

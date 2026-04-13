@@ -24,3 +24,15 @@ export function formatDateLabel(dateString: string) {
   const date = new Date(dateString);
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
+
+export function canModifyOrder(order: ScheduledOrderItem, now: Date = new Date()) {
+  if (order.status !== 'Editable') return false;
+  if (!order.editableUntil) return true;
+  return now <= new Date(order.editableUntil);
+}
+
+export function editableUntilLabel(order: ScheduledOrderItem) {
+  if (!order.editableUntil) return 'Editable window not set';
+  const date = new Date(order.editableUntil);
+  return `Editable until ${date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`;
+}

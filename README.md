@@ -12,6 +12,7 @@ This repository contains a runnable Expo + React Native starter app that impleme
 - Route-param driven Order Detail and Child Detail screens
 - Settings toggles for notification preferences (morning reminder + cutoff reminder)
 - Support request creation flow with category selection + thread insertion
+- Order-detail eligibility UX (editable window label + modify/cancel action locking)
 
 ## Files to know
 - `App.tsx` — navigation + screen UI scaffold
