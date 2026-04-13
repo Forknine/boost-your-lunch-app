@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { announcement, children, notificationLog, programs, scheduledOrders, serviceDates, supportThreads } from './src/mockData';
 import { ScheduledOrderItem } from './src/models';
 import { formatDateLabel, getPastOrders, getUpcomingOrders, toUserStatus } from './src/orderLogic';
+import { AuthProvider, useAuth } from './src/auth';
 
 type RootStackParamList = {
   Main: undefined;
@@ -27,13 +28,12 @@ const byrTheme = {
   border: '#D9E4FF',
   brand: '#1D2B64',
   brandSecondary: '#3A63FF',
-  highlight: '#90E86A',
-  warning: '#FFB703'
+  highlight: '#90E86A'
 };
 
 function SplashScreen({ onContinue }: { onContinue: () => void }) {
   return (
-    <SafeAreaView style={[styles.safeArea, { justifyContent: 'center' }]}>
+    <SafeAreaView style={[styles.safeArea, { justifyContent: 'center' }]}> 
       <View style={styles.splashWrap}>
         <View style={styles.splashOrb} />
         <Text style={styles.splashTitle}>Boost Your Lunch</Text>
@@ -46,9 +46,10 @@ function SplashScreen({ onContinue }: { onContinue: () => void }) {
   );
 }
 
-function LoginScreen({ onLogin }: { onLogin: () => void }) {
+function LoginScreen() {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
+  const { login } = useAuth();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -64,7 +65,7 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
           <TextInput value={code} onChangeText={setCode} placeholder="123456" placeholderTextColor="#8EA1CE" style={styles.input} />
         </View>
 
-        <TouchableOpacity style={styles.primaryAction} onPress={onLogin}>
+        <TouchableOpacity style={styles.primaryAction} onPress={() => login(email || 'parent@boostyourlunch.com')}>
           <Text style={styles.primaryActionText}>Continue to Dashboard</Text>
         </TouchableOpacity>
       </View>
@@ -100,6 +101,7 @@ function Panel({ title, subtitle, badge }: { title: string; subtitle?: string; b
 }
 
 function HomeScreen({ navigation }: any) {
+  const { auth } = useAuth();
   const upcoming = getUpcomingOrders(scheduledOrders);
   const nextOrder = upcoming[0];
   const quickActions = ['Order Lunch', 'Upcoming Orders', 'Past Orders', 'My Family', 'Support'];
@@ -111,7 +113,7 @@ function HomeScreen({ navigation }: any) {
           <View style={styles.heroAccent} />
           <Text style={styles.heroKicker}>Serving students everywhere</Text>
           <Text style={styles.heroTitle}>Boost Your Lunch</Text>
-          <Text style={styles.heroSubtitle}>School lunches. Handled.</Text>
+          <Text style={styles.heroSubtitle}>{auth.email ? `Welcome back, ${auth.email}` : 'School lunches. Handled.'}</Text>
         </View>
 
         <View style={styles.announcementPanel}>
@@ -209,13 +211,11 @@ function UpcomingOrdersScreen({ navigation }: any) {
   const orders = getUpcomingOrders(scheduledOrders);
   const filteredOrders = orders.filter((order) => (statusFilter === 'All' ? true : order.status === statusFilter));
 
-  const groupedByDate = useMemo(() => {
-    return filteredOrders.reduce<Record<string, ScheduledOrderItem[]>>((acc, item) => {
-      if (!acc[item.serviceDate]) acc[item.serviceDate] = [];
-      acc[item.serviceDate].push(item);
-      return acc;
-    }, {});
-  }, [filteredOrders]);
+  const groupedByDate = useMemo(() => filteredOrders.reduce<Record<string, ScheduledOrderItem[]>>((acc, item) => {
+    if (!acc[item.serviceDate]) acc[item.serviceDate] = [];
+    acc[item.serviceDate].push(item);
+    return acc;
+  }, {}), [filteredOrders]);
 
   return (
     <Screen title="Upcoming Orders" subtitle="Toggle between list and calendar presentation.">
@@ -235,45 +235,35 @@ function UpcomingOrdersScreen({ navigation }: any) {
         ))}
       </View>
 
-      {viewMode === 'list' &&
-        filteredOrders.map((row) => (
-          <TouchableOpacity key={row.id} style={styles.panel} onPress={() => navigation.getParent()?.navigate('OrderDetail', { orderId: row.id })}>
-            <View style={styles.panelTopRow}>
-              <Text style={styles.panelTitle}>{row.childName}</Text>
-              <Text style={styles.datePill}>{formatDateLabel(row.serviceDate)}</Text>
-            </View>
-            <Text style={styles.panelSubtitle}>{`${row.program} • ${row.menuItem}`}</Text>
-            <Text style={styles.metaStatus}>{toUserStatus(row)}</Text>
-          </TouchableOpacity>
-        ))}
+      {viewMode === 'list' && filteredOrders.map((row) => (
+        <TouchableOpacity key={row.id} style={styles.panel} onPress={() => navigation.getParent()?.navigate('OrderDetail', { orderId: row.id })}>
+          <View style={styles.panelTopRow}>
+            <Text style={styles.panelTitle}>{row.childName}</Text>
+            <Text style={styles.datePill}>{formatDateLabel(row.serviceDate)}</Text>
+          </View>
+          <Text style={styles.panelSubtitle}>{`${row.program} • ${row.menuItem}`}</Text>
+          <Text style={styles.metaStatus}>{toUserStatus(row)}</Text>
+        </TouchableOpacity>
+      ))}
 
-      {viewMode === 'calendar' &&
-        Object.entries(groupedByDate)
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([date, rows]) => (
-            <View key={date} style={styles.panel}>
-              <Text style={styles.panelTitle}>{formatDateLabel(date)}</Text>
-              {rows.map((row) => (
-                <TouchableOpacity key={row.id} style={styles.calendarLine} onPress={() => navigation.getParent()?.navigate('OrderDetail', { orderId: row.id })}>
-                  <Text style={styles.calendarLineText}>{`${row.childName} • ${row.menuItem}`}</Text>
-                  <Text style={styles.calendarLineMeta}>{toUserStatus(row)}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+      {viewMode === 'calendar' && Object.entries(groupedByDate).sort(([a], [b]) => a.localeCompare(b)).map(([date, rows]) => (
+        <View key={date} style={styles.panel}>
+          <Text style={styles.panelTitle}>{formatDateLabel(date)}</Text>
+          {rows.map((row) => (
+            <TouchableOpacity key={row.id} style={styles.calendarLine} onPress={() => navigation.getParent()?.navigate('OrderDetail', { orderId: row.id })}>
+              <Text style={styles.calendarLineText}>{`${row.childName} • ${row.menuItem}`}</Text>
+              <Text style={styles.calendarLineMeta}>{toUserStatus(row)}</Text>
+            </TouchableOpacity>
           ))}
+        </View>
+      ))}
     </Screen>
   );
 }
 
 function PastOrdersScreen() {
   const past = getPastOrders(scheduledOrders);
-  return (
-    <Screen title="Past Orders" subtitle="Completed and cancelled history.">
-      {past.map((order) => (
-        <Panel key={order.id} title={`${order.childName} • ${formatDateLabel(order.serviceDate)}`} subtitle={`${order.program} • ${order.menuItem}`} badge={toUserStatus(order).toUpperCase()} />
-      ))}
-    </Screen>
-  );
+  return <Screen title="Past Orders" subtitle="Completed and cancelled history.">{past.map((order) => <Panel key={order.id} title={`${order.childName} • ${formatDateLabel(order.serviceDate)}`} subtitle={`${order.program} • ${order.menuItem}`} badge={toUserStatus(order).toUpperCase()} />)}</Screen>;
 }
 
 function FamilyScreen({ navigation }: any) {
@@ -291,32 +281,21 @@ function FamilyScreen({ navigation }: any) {
 }
 
 function SupportScreen() {
-  return (
-    <Screen title="Support" subtitle="Submit requests and track replies.">
-      <Panel title="Create New Request" subtitle="Order Help, Cancellation/Refund, School Question, App Issue, General" />
-      {supportThreads.map((thread) => (
-        <Panel key={thread.id} title={thread.subject} subtitle={`${thread.category} • Updated ${thread.updatedAt}`} badge={thread.unread ? 'UNREAD' : 'OPEN'} />
-      ))}
-    </Screen>
-  );
+  return <Screen title="Support" subtitle="Submit requests and track replies."><Panel title="Create New Request" subtitle="Order Help, Cancellation/Refund, School Question, App Issue, General" />{supportThreads.map((thread) => <Panel key={thread.id} title={thread.subject} subtitle={`${thread.category} • Updated ${thread.updatedAt}`} badge={thread.unread ? 'UNREAD' : 'OPEN'} />)}</Screen>;
 }
 
 function NotificationsScreen() {
-  return (
-    <Screen title="Notifications" subtitle="In-app message log for all push events.">
-      {notificationLog.map((note) => (
-        <Panel key={note} title={note} subtitle="Tap to view details" />
-      ))}
-    </Screen>
-  );
+  return <Screen title="Notifications" subtitle="In-app message log for all push events.">{notificationLog.map((note) => <Panel key={note} title={note} subtitle="Tap to view details" />)}</Screen>;
 }
 
 function SettingsScreen() {
   const [morningReminder, setMorningReminder] = useState(true);
   const [deadlineReminder, setDeadlineReminder] = useState(true);
+  const { auth, logout } = useAuth();
 
   return (
     <Screen title="Settings" subtitle="Account, notifications, and preferences.">
+      <Panel title="Logged in as" subtitle={auth.email ?? 'Unknown'} />
       <View style={styles.settingsRow}>
         <View>
           <Text style={styles.panelTitle}>Morning-of reminder</Text>
@@ -332,7 +311,10 @@ function SettingsScreen() {
         <Switch value={deadlineReminder} onValueChange={setDeadlineReminder} trackColor={{ true: '#C6F4A6' }} thumbColor={deadlineReminder ? '#3A63FF' : '#C5C5C5'} />
       </View>
       <Panel title="Linked Account" subtitle="Shopify customer connected" />
-      <Panel title="App Version" subtitle="0.5.0" />
+      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+        <Text style={styles.logoutText}>Log Out</Text>
+      </TouchableOpacity>
+      <Panel title="App Version" subtitle="0.6.0" />
     </Screen>
   );
 }
@@ -370,14 +352,7 @@ function ChildDetailScreen({ route }: any) {
 
 function MainTabs() {
   return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: { backgroundColor: byrTheme.surface, borderTopColor: '#CFE0FF', borderTopWidth: 1, height: 72, paddingBottom: 10, paddingTop: 8 },
-        tabBarActiveTintColor: byrTheme.brandSecondary,
-        tabBarInactiveTintColor: '#7A89A6'
-      }}
-    >
+    <Tab.Navigator screenOptions={{ headerShown: false, tabBarStyle: { backgroundColor: byrTheme.surface, borderTopColor: '#CFE0FF', borderTopWidth: 1, height: 72, paddingBottom: 10, paddingTop: 8 }, tabBarActiveTintColor: byrTheme.brandSecondary, tabBarInactiveTintColor: '#7A89A6' }}>
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Order" component={OrderLunchScreen} options={{ title: 'Order Lunch' }} />
       <Tab.Screen name="Upcoming" component={UpcomingOrdersScreen} />
@@ -390,22 +365,11 @@ function MainTabs() {
   );
 }
 
-export default function App() {
-  const [authStep, setAuthStep] = useState<'splash' | 'login' | 'authed'>('splash');
-
-  if (authStep === 'splash') return <SplashScreen onContinue={() => setAuthStep('login')} />;
-  if (authStep === 'login') return <LoginScreen onLogin={() => setAuthStep('authed')} />;
-
+function AuthedApp() {
   return (
     <NavigationContainer>
       <StatusBar style="light" />
-      <Stack.Navigator
-        screenOptions={{
-          headerStyle: { backgroundColor: byrTheme.brand },
-          headerTintColor: '#FFFFFF',
-          headerTitleStyle: { fontWeight: '700' }
-        }}
-      >
+      <Stack.Navigator screenOptions={{ headerStyle: { backgroundColor: byrTheme.brand }, headerTintColor: '#FFFFFF', headerTitleStyle: { fontWeight: '700' } }}>
         <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
         <Stack.Screen name="OrderDetail" component={OrderDetailScreen} options={{ title: 'Order Detail / Modify' }} />
         <Stack.Screen name="ChildDetail" component={ChildDetailScreen} options={{ title: 'Child Detail / Edit' }} />
@@ -414,80 +378,42 @@ export default function App() {
   );
 }
 
+function Root() {
+  const [seenSplash, setSeenSplash] = useState(false);
+  const { auth } = useAuth();
+
+  if (!seenSplash) return <SplashScreen onContinue={() => setSeenSplash(true)} />;
+  if (auth.status === 'signed_out') return <LoginScreen />;
+  return <AuthedApp />;
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <Root />
+    </AuthProvider>
+  );
+}
+
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: byrTheme.bg },
   container: { padding: 16, gap: 14, paddingBottom: 28 },
-  splashWrap: {
-    margin: 16,
-    padding: 24,
-    borderRadius: 24,
-    backgroundColor: byrTheme.brand,
-    shadowColor: '#1D2B64',
-    shadowOpacity: 0.35,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8
-  },
-  splashOrb: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 999,
-    backgroundColor: '#4D7BFF',
-    top: -70,
-    right: -50,
-    opacity: 0.4
-  },
+  splashWrap: { margin: 16, padding: 24, borderRadius: 24, backgroundColor: byrTheme.brand, shadowColor: '#1D2B64', shadowOpacity: 0.35, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 8 },
+  splashOrb: { position: 'absolute', width: 180, height: 180, borderRadius: 999, backgroundColor: '#4D7BFF', top: -70, right: -50, opacity: 0.4 },
   splashTitle: { color: '#FFFFFF', fontSize: 34, fontWeight: '800', letterSpacing: -0.5, marginBottom: 8 },
   splashSub: { color: '#D7E2FF', fontSize: 15, marginBottom: 22 },
   authWrap: { padding: 16, gap: 12 },
-  inputCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: byrTheme.border,
-    padding: 14,
-    gap: 8
-  },
+  inputCard: { backgroundColor: '#FFFFFF', borderRadius: 18, borderWidth: 1, borderColor: byrTheme.border, padding: 14, gap: 8 },
   inputLabel: { color: byrTheme.muted, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#C9D8FF',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: byrTheme.text,
-    backgroundColor: byrTheme.bgAlt
-  },
-  hero: {
-    backgroundColor: byrTheme.brand,
-    borderRadius: 24,
-    padding: 18,
-    overflow: 'hidden',
-    shadowColor: '#1D2B64',
-    shadowOpacity: 0.32,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8
-  },
+  input: { borderWidth: 1, borderColor: '#C9D8FF', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, color: byrTheme.text, backgroundColor: byrTheme.bgAlt },
+  hero: { backgroundColor: byrTheme.brand, borderRadius: 24, padding: 18, overflow: 'hidden', shadowColor: '#1D2B64', shadowOpacity: 0.32, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 8 },
   heroAccent: { position: 'absolute', width: 180, height: 180, borderRadius: 999, backgroundColor: '#4D7BFF', top: -60, right: -50, opacity: 0.4 },
   heroKicker: { textTransform: 'uppercase', fontSize: 11, letterSpacing: 1, fontWeight: '700', color: '#C9D9FF' },
   heroTitle: { marginTop: 6, fontSize: 30, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.4 },
   heroSubtitle: { marginTop: 4, color: '#D7E2FF', fontSize: 16 },
   announcementPanel: { backgroundColor: '#DDF1CF', borderRadius: 20, padding: 3 },
   summaryRow: { gap: 10 },
-  summaryCard: {
-    backgroundColor: byrTheme.surface,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: byrTheme.border,
-    padding: 14,
-    shadowColor: '#2E4FAE',
-    shadowOpacity: 0.08,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3
-  },
+  summaryCard: { backgroundColor: byrTheme.surface, borderRadius: 18, borderWidth: 1, borderColor: byrTheme.border, padding: 14, shadowColor: '#2E4FAE', shadowOpacity: 0.08, shadowRadius: 14, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
   summaryLabel: { color: byrTheme.muted, fontWeight: '700', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 },
   summaryValue: { marginTop: 6, fontSize: 30, color: byrTheme.brand, fontWeight: '800' },
   summaryMeta: { marginTop: 2, color: byrTheme.muted, fontSize: 13 },
@@ -496,44 +422,13 @@ const styles = StyleSheet.create({
   screenTitle: { fontSize: 30, fontWeight: '800', color: byrTheme.text, letterSpacing: -0.6 },
   screenSubtitle: { marginTop: 4, color: byrTheme.muted, fontSize: 14 },
   sectionLabel: { marginTop: 6, marginBottom: 2, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, color: '#385CBF', fontWeight: '700' },
-  primaryAction: {
-    borderRadius: 16,
-    backgroundColor: byrTheme.brandSecondary,
-    paddingVertical: 15,
-    paddingHorizontal: 16,
-    shadowColor: '#3A63FF',
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 6
-  },
+  primaryAction: { borderRadius: 16, backgroundColor: byrTheme.brandSecondary, paddingVertical: 15, paddingHorizontal: 16, shadowColor: '#3A63FF', shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 6 },
   primaryActionText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700', textAlign: 'center' },
-  panel: {
-    backgroundColor: byrTheme.surface,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: byrTheme.border,
-    padding: 14,
-    shadowColor: '#2F4EA5',
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2
-  },
+  panel: { backgroundColor: byrTheme.surface, borderRadius: 18, borderWidth: 1, borderColor: byrTheme.border, padding: 14, shadowColor: '#2F4EA5', shadowOpacity: 0.06, shadowRadius: 14, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
   panelTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   panelTitle: { color: byrTheme.text, fontSize: 16, fontWeight: '700', flexShrink: 1 },
   panelSubtitle: { color: byrTheme.muted, marginTop: 5, fontSize: 14, lineHeight: 20 },
-  badge: {
-    backgroundColor: '#1D2B64',
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 999,
-    overflow: 'hidden'
-  },
+  badge: { backgroundColor: '#1D2B64', color: '#FFFFFF', fontSize: 10, fontWeight: '800', letterSpacing: 0.8, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 999, overflow: 'hidden' },
   datePill: { borderRadius: 999, backgroundColor: '#ECF2FF', borderWidth: 1, borderColor: '#BFD0FF', paddingHorizontal: 8, paddingVertical: 4, fontSize: 12, color: '#2440A4', fontWeight: '700' },
   metaStatus: { marginTop: 10, color: '#5C9B2E', fontWeight: '700', fontSize: 13 },
   toggleRow: { flexDirection: 'row', gap: 8 },
@@ -549,20 +444,7 @@ const styles = StyleSheet.create({
   calendarLine: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#E4EBFF' },
   calendarLineText: { color: byrTheme.text, fontWeight: '600' },
   calendarLineMeta: { marginTop: 3, color: byrTheme.muted, fontSize: 13 },
-  settingsRow: {
-    backgroundColor: byrTheme.surface,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: byrTheme.border,
-    padding: 14,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 8,
-    shadowColor: '#3A63FF',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 2
-  }
+  settingsRow: { backgroundColor: byrTheme.surface, borderRadius: 18, borderWidth: 1, borderColor: byrTheme.border, padding: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, shadowColor: '#3A63FF', shadowOpacity: 0.05, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  logoutButton: { borderRadius: 12, borderWidth: 1, borderColor: '#ECA6A6', backgroundColor: '#FFF4F4', paddingVertical: 12 },
+  logoutText: { textAlign: 'center', color: '#B03030', fontWeight: '700' }
 });
