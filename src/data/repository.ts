@@ -1,4 +1,4 @@
-import { AppAnnouncement, ChildProfile, ScheduledOrderItem, SupportThread } from '../models';
+import { AppAnnouncement, ChildProfile, NotificationPreferences, ScheduledOrderItem, SupportThread } from '../models';
 
 export type AppDataBundle = {
   announcement: AppAnnouncement;
@@ -6,6 +6,7 @@ export type AppDataBundle = {
   scheduledOrders: ScheduledOrderItem[];
   supportThreads: SupportThread[];
   notificationLog: string[];
+  notificationPreferences: NotificationPreferences;
   programs: string[];
   serviceDates: string[];
 };
@@ -25,4 +26,5 @@ export interface AppRepository {
   fetchBundle(): Promise<AppDataBundle>;
   createDraft(input: DraftInput): Promise<{ draftId: string }>;
   createSupportThread(input: SupportThreadInput): Promise<{ threadId: string; updatedAt: string }>;
+  updateNotificationPreferences(input: NotificationPreferences): Promise<NotificationPreferences>;
 }

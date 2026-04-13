@@ -350,17 +350,17 @@ function NotificationsScreen() {
 }
 
 function SettingsScreen() {
-  const [morningReminder, setMorningReminder] = useState(true);
-  const [deadlineReminder, setDeadlineReminder] = useState(true);
   const { auth, logout } = useAuth();
+  const { data, updateNotificationPreferences } = useAppData();
+  const prefs = data.notificationPreferences;
   return (
     <Screen title="Settings" subtitle="Account, notifications, and preferences.">
       <Panel title="Logged in as" subtitle={auth.email ?? 'Unknown'} />
-      <View style={styles.settingsRow}><View><Text style={styles.panelTitle}>Morning-of reminder</Text><Text style={styles.panelSubtitle}>Send a notification on lunch days</Text></View><Switch value={morningReminder} onValueChange={setMorningReminder} trackColor={{ true: '#C6F4A6' }} thumbColor={morningReminder ? '#3A63FF' : '#C5C5C5'} /></View>
-      <View style={styles.settingsRow}><View><Text style={styles.panelTitle}>Ordering deadline reminder</Text><Text style={styles.panelSubtitle}>Notify before nightly cutoff time</Text></View><Switch value={deadlineReminder} onValueChange={setDeadlineReminder} trackColor={{ true: '#C6F4A6' }} thumbColor={deadlineReminder ? '#3A63FF' : '#C5C5C5'} /></View>
+      <View style={styles.settingsRow}><View><Text style={styles.panelTitle}>Morning-of reminder</Text><Text style={styles.panelSubtitle}>Send a notification on lunch days</Text></View><Switch value={prefs.morningReminder} onValueChange={(value) => updateNotificationPreferences({ ...prefs, morningReminder: value })} trackColor={{ true: '#C6F4A6' }} thumbColor={prefs.morningReminder ? '#3A63FF' : '#C5C5C5'} /></View>
+      <View style={styles.settingsRow}><View><Text style={styles.panelTitle}>Ordering deadline reminder</Text><Text style={styles.panelSubtitle}>Notify before nightly cutoff time</Text></View><Switch value={prefs.cutoffReminder} onValueChange={(value) => updateNotificationPreferences({ ...prefs, cutoffReminder: value })} trackColor={{ true: '#C6F4A6' }} thumbColor={prefs.cutoffReminder ? '#3A63FF' : '#C5C5C5'} /></View>
       <Panel title="Linked Account" subtitle="Shopify customer connected" />
       <TouchableOpacity style={styles.logoutButton} onPress={logout}><Text style={styles.logoutText}>Log Out</Text></TouchableOpacity>
-      <Panel title="App Version" subtitle="0.7.0" />
+      <Panel title="App Version" subtitle="0.8.0" />
     </Screen>
   );
 }

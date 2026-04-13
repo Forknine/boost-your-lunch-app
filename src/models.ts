@@ -47,3 +47,8 @@ export type AppAnnouncement = {
   body: string;
   ctaLabel?: string;
 };
+
+export type NotificationPreferences = {
+  morningReminder: boolean;
+  cutoffReminder: boolean;
+};

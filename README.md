@@ -10,7 +10,7 @@ This repository contains a runnable Expo + React Native starter app that impleme
 - Status filtering for upcoming orders (All / Editable / Locked)
 - Splash + Login/Account Link flow before entering the main app
 - Route-param driven Order Detail and Child Detail screens
-- Settings toggles for notification preferences (morning reminder + cutoff reminder)
+- Settings toggles for notification preferences (morning reminder + cutoff reminder) persisted via app-data context
 - Support request creation flow with category selection + thread insertion
 - Order-detail eligibility UX (editable window label + modify/cancel action locking)
 

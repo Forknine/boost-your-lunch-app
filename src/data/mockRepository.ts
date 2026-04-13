@@ -10,6 +10,10 @@ export class MockRepository implements AppRepository {
       scheduledOrders,
       supportThreads,
       notificationLog,
+      notificationPreferences: {
+        morningReminder: true,
+        cutoffReminder: true
+      },
       programs,
       serviceDates
     };
@@ -32,5 +36,10 @@ export class MockRepository implements AppRepository {
       minute: '2-digit'
     });
     return { threadId: `thr_${random}`, updatedAt };
+  }
+
+  async updateNotificationPreferences(input: { morningReminder: boolean; cutoffReminder: boolean }) {
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    return input;
   }
 }

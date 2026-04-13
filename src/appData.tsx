@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
-import { AppAnnouncement, ChildProfile, ScheduledOrderItem, SupportThread } from './models';
+import { AppAnnouncement, ChildProfile, NotificationPreferences, ScheduledOrderItem, SupportThread } from './models';
 import { DraftInput, SupportThreadInput } from './data/repository';
 import { MockRepository } from './data/mockRepository';
 import { SupabaseRepository } from './data/supabaseRepository';
@@ -11,6 +11,7 @@ type AppDataState = {
   scheduledOrders: ScheduledOrderItem[];
   supportThreads: SupportThread[];
   notificationLog: string[];
+  notificationPreferences: NotificationPreferences;
   programs: string[];
   serviceDates: string[];
 };
@@ -22,6 +23,7 @@ type AppDataContextValue = {
   refresh: () => Promise<void>;
   createDraft: (input: DraftInput) => Promise<{ draftId: string }>;
   createSupportThread: (input: SupportThreadInput) => Promise<{ threadId: string }>;
+  updateNotificationPreferences: (input: NotificationPreferences) => Promise<void>;
 };
 
 const provider = process.env.EXPO_PUBLIC_DATA_PROVIDER === 'supabase' ? 'supabase' : 'mock';
@@ -33,6 +35,7 @@ const seedData: AppDataState = {
   scheduledOrders: [],
   supportThreads: [],
   notificationLog: [],
+  notificationPreferences: { morningReminder: true, cutoffReminder: true },
   programs: [],
   serviceDates: []
 };
@@ -72,9 +75,14 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     return { threadId: created.threadId };
   }, []);
 
+  const updateNotificationPreferences = useCallback(async (input: NotificationPreferences) => {
+    const updated = await repo.updateNotificationPreferences(input);
+    setData((prev) => ({ ...prev, notificationPreferences: updated }));
+  }, []);
+
   const value = useMemo<AppDataContextValue>(
-    () => ({ data, loading, provider, refresh, createDraft, createSupportThread }),
-    [data, loading, refresh, createDraft, createSupportThread]
+    () => ({ data, loading, provider, refresh, createDraft, createSupportThread, updateNotificationPreferences }),
+    [data, loading, refresh, createDraft, createSupportThread, updateNotificationPreferences]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
