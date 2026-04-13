@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -160,11 +160,18 @@ function HomeScreen({ navigation }: any) {
 }
 
 function OrderLunchScreen() {
-  const { data } = useAppData();
+  const { data, createDraft } = useAppData();
   const [selectedChildId, setSelectedChildId] = useState(data.children[0]?.id ?? '');
-  const [selectedProgram, setSelectedProgram] = useState(data.programs[0]);
-  const [selectedDates, setSelectedDates] = useState<string[]>([data.serviceDates[0]]);
+  const [selectedProgram, setSelectedProgram] = useState(data.programs[0] ?? '');
+  const [selectedDates, setSelectedDates] = useState<string[]>(data.serviceDates[0] ? [data.serviceDates[0]] : []);
+  const [savedDraftId, setSavedDraftId] = useState<string | null>(null);
   const selectedChild = data.children.find((child) => child.id === selectedChildId);
+
+  useEffect(() => {
+    if (!selectedChildId && data.children[0]?.id) setSelectedChildId(data.children[0].id);
+    if (!selectedProgram && data.programs[0]) setSelectedProgram(data.programs[0]);
+    if (selectedDates.length === 0 && data.serviceDates[0]) setSelectedDates([data.serviceDates[0]]);
+  }, [data.children, data.programs, data.serviceDates, selectedChildId, selectedProgram, selectedDates.length]);
 
   const toggleDate = (date: string) => {
     setSelectedDates((prev) => {
@@ -202,8 +209,25 @@ function OrderLunchScreen() {
         ))}
       </View>
 
-      <Panel title="Draft Review" subtitle={`${selectedChild?.firstName ?? 'Child'} • ${selectedProgram} • ${selectedDates.length} date(s) selected`} badge="READY" />
-      <TouchableOpacity style={styles.primaryAction}><Text style={styles.primaryActionText}>Proceed to Checkout</Text></TouchableOpacity>
+      <Panel title="Draft Review" subtitle={`${selectedChild?.firstName ?? 'Child'} • ${selectedProgram || 'Program'} • ${selectedDates.length} date(s) selected`} badge="READY" />
+      {savedDraftId ? <Panel title="Draft Saved" subtitle={`Saved as ${savedDraftId}`} badge="SAVED" /> : null}
+      <TouchableOpacity
+        style={styles.primaryAction}
+        onPress={async () => {
+          if (!selectedChildId || !selectedProgram || selectedDates.length === 0) return;
+          const result = await createDraft({
+            childId: selectedChildId,
+            program: selectedProgram,
+            serviceDates: selectedDates
+          });
+          setSavedDraftId(result.draftId);
+        }}
+      >
+        <Text style={styles.primaryActionText}>Save Draft</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.secondaryAction}>
+        <Text style={styles.secondaryActionText}>Proceed to Checkout</Text>
+      </TouchableOpacity>
     </Screen>
   );
 }
@@ -336,6 +360,11 @@ function AuthedApp() {
 function Root() {
   const [seenSplash, setSeenSplash] = useState(false);
   const { auth } = useAuth();
+  const { refresh } = useAppData();
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
   if (!seenSplash) return <SplashScreen onContinue={() => setSeenSplash(true)} />;
   if (auth.status === 'signed_out') return <LoginScreen />;
   return <AuthedApp />;

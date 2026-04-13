@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
-import { announcement, children, notificationLog, programs, scheduledOrders, serviceDates, supportThreads } from './mockData';
 import { AppAnnouncement, ChildProfile, ScheduledOrderItem, SupportThread } from './models';
+import { DraftInput } from './data/repository';
+import { MockRepository } from './data/mockRepository';
 
 type AppDataState = {
   announcement: AppAnnouncement;
@@ -17,33 +18,41 @@ type AppDataContextValue = {
   data: AppDataState;
   loading: boolean;
   refresh: () => Promise<void>;
+  createDraft: (input: DraftInput) => Promise<{ draftId: string }>;
 };
 
+const repo = new MockRepository();
+
 const seedData: AppDataState = {
-  announcement,
-  children,
-  scheduledOrders,
-  supportThreads,
-  notificationLog,
-  programs,
-  serviceDates
+  announcement: { id: 'boot', title: 'Loading announcement', body: 'Please wait...' },
+  children: [],
+  scheduledOrders: [],
+  supportThreads: [],
+  notificationLog: [],
+  programs: [],
+  serviceDates: []
 };
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
 
 export function AppDataProvider({ children }: { children: React.ReactNode }) {
-  const [data] = useState<AppDataState>(seedData);
+  const [data, setData] = useState<AppDataState>(seedData);
   const [loading, setLoading] = useState(false);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    const bundle = await repo.fetchBundle();
+    setData(bundle);
     setLoading(false);
-  };
+  }, []);
+
+  const createDraft = useCallback(async (input: DraftInput) => {
+    return repo.createDraft(input);
+  }, []);
 
   const value = useMemo<AppDataContextValue>(
-    () => ({ data, loading, refresh }),
-    [data, loading]
+    () => ({ data, loading, refresh, createDraft }),
+    [data, loading, refresh, createDraft]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
