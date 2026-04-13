@@ -106,6 +106,8 @@ function HomeScreen({ navigation }: any) {
   const { data, loading, provider, refresh } = useAppData();
   const upcoming = getUpcomingOrders(data.scheduledOrders);
   const nextOrder = upcoming[0];
+  const unreadSupport = data.supportThreads.filter((thread) => thread.unread).length;
+  const unreadNotifications = data.notificationLog.filter((item) => !item.read).length;
   const quickActions = ['Order Lunch', 'Upcoming Orders', 'Past Orders', 'My Family', 'Support'];
 
   return (
@@ -134,6 +136,7 @@ function HomeScreen({ navigation }: any) {
             <Text style={styles.summaryMeta}>Active orders</Text>
           </View>
         </View>
+        <Panel title="Inbox Summary" subtitle={`${unreadNotifications} unread notifications • ${unreadSupport} unread support replies`} />
 
         <TouchableOpacity style={styles.secondaryAction} onPress={refresh}>
           <Text style={styles.secondaryActionText}>{loading ? 'Refreshing...' : 'Refresh dashboard'}</Text>
@@ -345,8 +348,16 @@ function SupportScreen() {
 }
 
 function NotificationsScreen() {
-  const { data } = useAppData();
-  return <Screen title="Notifications" subtitle="In-app message log for all push events.">{data.notificationLog.map((note) => <Panel key={note} title={note} subtitle="Tap to view details" />)}</Screen>;
+  const { data, markNotificationRead } = useAppData();
+  return (
+    <Screen title="Notifications" subtitle="In-app message log for all push events.">
+      {data.notificationLog.map((note) => (
+        <TouchableOpacity key={note.id} onPress={() => markNotificationRead(note.id)}>
+          <Panel title={note.title} subtitle={`${note.body} • ${note.createdAt}`} badge={note.read ? 'READ' : 'UNREAD'} />
+        </TouchableOpacity>
+      ))}
+    </Screen>
+  );
 }
 
 function SettingsScreen() {

@@ -101,7 +101,25 @@ export const supportThreads: SupportThread[] = [
 ];
 
 export const notificationLog = [
-  'Order confirmed for Mia on Apr 16',
-  'Ordering closes tonight at 8:00 PM',
-  'Support replied to your request'
+  {
+    id: 'notif_001',
+    title: 'Order Confirmed',
+    body: 'Order confirmed for Mia on Apr 16',
+    createdAt: '2026-04-13 09:05 AM',
+    read: false
+  },
+  {
+    id: 'notif_002',
+    title: 'Reminder',
+    body: 'Ordering closes tonight at 8:00 PM',
+    createdAt: '2026-04-13 03:00 PM',
+    read: false
+  },
+  {
+    id: 'notif_003',
+    title: 'Support Reply',
+    body: 'Support replied to your request',
+    createdAt: '2026-04-13 04:12 PM',
+    read: true
+  }
 ];

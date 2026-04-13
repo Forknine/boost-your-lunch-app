@@ -13,6 +13,7 @@ This repository contains a runnable Expo + React Native starter app that impleme
 - Settings toggles for notification preferences (morning reminder + cutoff reminder) persisted via app-data context
 - Support request creation flow with category selection + thread insertion
 - Order-detail eligibility UX (editable window label + modify/cancel action locking)
+- Notification center unread/read tracking with tap-to-mark-read
 
 ## Files to know
 - `App.tsx` — navigation + screen UI scaffold

@@ -22,4 +22,8 @@ export class SupabaseRepository implements AppRepository {
   async updateNotificationPreferences(_input: NotificationPreferences): Promise<NotificationPreferences> {
     throw new Error('SupabaseRepository.updateNotificationPreferences not implemented yet.');
   }
+
+  async markNotificationRead(_notificationId: string): Promise<void> {
+    throw new Error('SupabaseRepository.markNotificationRead not implemented yet.');
+  }
 }

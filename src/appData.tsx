@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
-import { AppAnnouncement, ChildProfile, NotificationPreferences, ScheduledOrderItem, SupportThread } from './models';
+import { AppAnnouncement, ChildProfile, NotificationItem, NotificationPreferences, ScheduledOrderItem, SupportThread } from './models';
 import { DraftInput, SupportThreadInput } from './data/repository';
 import { MockRepository } from './data/mockRepository';
 import { SupabaseRepository } from './data/supabaseRepository';
@@ -10,7 +10,7 @@ type AppDataState = {
   children: ChildProfile[];
   scheduledOrders: ScheduledOrderItem[];
   supportThreads: SupportThread[];
-  notificationLog: string[];
+  notificationLog: NotificationItem[];
   notificationPreferences: NotificationPreferences;
   programs: string[];
   serviceDates: string[];
@@ -24,6 +24,7 @@ type AppDataContextValue = {
   createDraft: (input: DraftInput) => Promise<{ draftId: string }>;
   createSupportThread: (input: SupportThreadInput) => Promise<{ threadId: string }>;
   updateNotificationPreferences: (input: NotificationPreferences) => Promise<void>;
+  markNotificationRead: (notificationId: string) => Promise<void>;
 };
 
 const provider = process.env.EXPO_PUBLIC_DATA_PROVIDER === 'supabase' ? 'supabase' : 'mock';
@@ -80,9 +81,17 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     setData((prev) => ({ ...prev, notificationPreferences: updated }));
   }, []);
 
+  const markNotificationRead = useCallback(async (notificationId: string) => {
+    await repo.markNotificationRead(notificationId);
+    setData((prev) => ({
+      ...prev,
+      notificationLog: prev.notificationLog.map((item) => (item.id === notificationId ? { ...item, read: true } : item))
+    }));
+  }, []);
+
   const value = useMemo<AppDataContextValue>(
-    () => ({ data, loading, provider, refresh, createDraft, createSupportThread, updateNotificationPreferences }),
-    [data, loading, refresh, createDraft, createSupportThread, updateNotificationPreferences]
+    () => ({ data, loading, provider, refresh, createDraft, createSupportThread, updateNotificationPreferences, markNotificationRead }),
+    [data, loading, refresh, createDraft, createSupportThread, updateNotificationPreferences, markNotificationRead]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

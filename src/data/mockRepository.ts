@@ -42,4 +42,8 @@ export class MockRepository implements AppRepository {
     await new Promise((resolve) => setTimeout(resolve, 80));
     return input;
   }
+
+  async markNotificationRead(_notificationId: string) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
 }
