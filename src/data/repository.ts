@@ -28,4 +28,5 @@ export interface AppRepository {
   createSupportThread(input: SupportThreadInput): Promise<{ threadId: string; updatedAt: string }>;
   updateNotificationPreferences(input: NotificationPreferences): Promise<NotificationPreferences>;
   markNotificationRead(notificationId: string): Promise<void>;
+  updateChildStatus(childId: string, active: boolean): Promise<{ childId: string; active: boolean }>;
 }

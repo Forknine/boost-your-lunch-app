@@ -25,6 +25,7 @@ type AppDataContextValue = {
   createSupportThread: (input: SupportThreadInput) => Promise<{ threadId: string }>;
   updateNotificationPreferences: (input: NotificationPreferences) => Promise<void>;
   markNotificationRead: (notificationId: string) => Promise<void>;
+  updateChildStatus: (childId: string, active: boolean) => Promise<void>;
 };
 
 const provider = process.env.EXPO_PUBLIC_DATA_PROVIDER === 'supabase' ? 'supabase' : 'mock';
@@ -89,9 +90,17 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const updateChildStatus = useCallback(async (childId: string, active: boolean) => {
+    await repo.updateChildStatus(childId, active);
+    setData((prev) => ({
+      ...prev,
+      children: prev.children.map((child) => (child.id === childId ? { ...child, active } : child))
+    }));
+  }, []);
+
   const value = useMemo<AppDataContextValue>(
-    () => ({ data, loading, provider, refresh, createDraft, createSupportThread, updateNotificationPreferences, markNotificationRead }),
-    [data, loading, refresh, createDraft, createSupportThread, updateNotificationPreferences, markNotificationRead]
+    () => ({ data, loading, provider, refresh, createDraft, createSupportThread, updateNotificationPreferences, markNotificationRead, updateChildStatus }),
+    [data, loading, refresh, createDraft, createSupportThread, updateNotificationPreferences, markNotificationRead, updateChildStatus]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

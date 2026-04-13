@@ -26,4 +26,8 @@ export class SupabaseRepository implements AppRepository {
   async markNotificationRead(_notificationId: string): Promise<void> {
     throw new Error('SupabaseRepository.markNotificationRead not implemented yet.');
   }
+
+  async updateChildStatus(_childId: string, _active: boolean): Promise<{ childId: string; active: boolean }> {
+    throw new Error('SupabaseRepository.updateChildStatus not implemented yet.');
+  }
 }

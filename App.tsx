@@ -299,8 +299,23 @@ function PastOrdersScreen() {
 }
 
 function FamilyScreen({ navigation }: any) {
-  const { data } = useAppData();
-  return <Screen title="My Family" subtitle="Children, school assignments, and notes.">{data.children.map((child) => <TouchableOpacity key={child.id} style={styles.panel} onPress={() => navigation.getParent()?.navigate('ChildDetail', { childId: child.id })}><Text style={styles.panelTitle}>{`${child.firstName} ${child.lastName ?? ''}`.trim()}</Text><Text style={styles.panelSubtitle}>{`${child.school} • ${child.classroom} • Grade ${child.grade}`}</Text></TouchableOpacity>)}<Panel title="Add Child" subtitle="Next: connect to full create/edit child form" /></Screen>;
+  const { data, updateChildStatus } = useAppData();
+  return (
+    <Screen title="My Family" subtitle="Children, school assignments, and notes.">
+      {data.children.map((child) => (
+        <View key={child.id} style={styles.panel}>
+          <TouchableOpacity onPress={() => navigation.getParent()?.navigate('ChildDetail', { childId: child.id })}>
+            <Text style={styles.panelTitle}>{`${child.firstName} ${child.lastName ?? ''}`.trim()}</Text>
+            <Text style={styles.panelSubtitle}>{`${child.school} • ${child.classroom} • Grade ${child.grade}`}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.secondaryAction} onPress={() => updateChildStatus(child.id, !child.active)}>
+            <Text style={styles.secondaryActionText}>{child.active ? 'Deactivate Child' : 'Reactivate Child'}</Text>
+          </TouchableOpacity>
+        </View>
+      ))}
+      <Panel title="Add Child" subtitle="Next: connect to full create/edit child form" />
+    </Screen>
+  );
 }
 
 function SupportScreen() {

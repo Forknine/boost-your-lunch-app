@@ -46,4 +46,9 @@ export class MockRepository implements AppRepository {
   async markNotificationRead(_notificationId: string) {
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
+
+  async updateChildStatus(childId: string, active: boolean) {
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    return { childId, active };
+  }
 }
