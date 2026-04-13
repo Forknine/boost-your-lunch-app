@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaView, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import { announcement, children, notificationLog, programs, scheduledOrders, serviceDates, supportThreads } from './src/mockData';
@@ -30,6 +30,47 @@ const byrTheme = {
   highlight: '#90E86A',
   warning: '#FFB703'
 };
+
+function SplashScreen({ onContinue }: { onContinue: () => void }) {
+  return (
+    <SafeAreaView style={[styles.safeArea, { justifyContent: 'center' }]}>
+      <View style={styles.splashWrap}>
+        <View style={styles.splashOrb} />
+        <Text style={styles.splashTitle}>Boost Your Lunch</Text>
+        <Text style={styles.splashSub}>Fast ordering for families, schools, and programs.</Text>
+        <TouchableOpacity style={styles.primaryAction} onPress={onContinue}>
+          <Text style={styles.primaryActionText}>Get Started</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+function LoginScreen({ onLogin }: { onLogin: () => void }) {
+  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.authWrap}>
+        <Text style={styles.kicker}>Account Link</Text>
+        <Text style={styles.screenTitle}>Parent Login</Text>
+        <Text style={styles.screenSubtitle}>Use your BYL email and temporary access code.</Text>
+
+        <View style={styles.inputCard}>
+          <Text style={styles.inputLabel}>Email</Text>
+          <TextInput value={email} onChangeText={setEmail} placeholder="parent@email.com" placeholderTextColor="#8EA1CE" style={styles.input} />
+          <Text style={styles.inputLabel}>Access Code</Text>
+          <TextInput value={code} onChangeText={setCode} placeholder="123456" placeholderTextColor="#8EA1CE" style={styles.input} />
+        </View>
+
+        <TouchableOpacity style={styles.primaryAction} onPress={onLogin}>
+          <Text style={styles.primaryActionText}>Continue to Dashboard</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+}
 
 function Screen({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
@@ -61,7 +102,6 @@ function Panel({ title, subtitle, badge }: { title: string; subtitle?: string; b
 function HomeScreen({ navigation }: any) {
   const upcoming = getUpcomingOrders(scheduledOrders);
   const nextOrder = upcoming[0];
-
   const quickActions = ['Order Lunch', 'Upcoming Orders', 'Past Orders', 'My Family', 'Support'];
 
   return (
@@ -116,14 +156,11 @@ function OrderLunchScreen() {
   const [selectedChildId, setSelectedChildId] = useState(children[0]?.id ?? '');
   const [selectedProgram, setSelectedProgram] = useState(programs[0]);
   const [selectedDates, setSelectedDates] = useState<string[]>([serviceDates[0]]);
-
   const selectedChild = children.find((child) => child.id === selectedChildId);
 
   const toggleDate = (date: string) => {
     setSelectedDates((prev) => {
-      if (prev.includes(date)) {
-        return prev.length === 1 ? prev : prev.filter((d) => d !== date);
-      }
+      if (prev.includes(date)) return prev.length === 1 ? prev : prev.filter((d) => d !== date);
       return [...prev, date];
     });
   };
@@ -133,11 +170,7 @@ function OrderLunchScreen() {
       <Text style={styles.sectionLabel}>1) Choose child</Text>
       <View style={styles.toggleRowWrap}>
         {children.map((child) => (
-          <TouchableOpacity
-            key={child.id}
-            style={[styles.filterChip, selectedChildId === child.id && styles.filterChipActive]}
-            onPress={() => setSelectedChildId(child.id)}
-          >
+          <TouchableOpacity key={child.id} style={[styles.filterChip, selectedChildId === child.id && styles.filterChipActive]} onPress={() => setSelectedChildId(child.id)}>
             <Text style={[styles.filterChipText, selectedChildId === child.id && styles.filterChipTextActive]}>{child.firstName}</Text>
           </TouchableOpacity>
         ))}
@@ -146,11 +179,7 @@ function OrderLunchScreen() {
       <Text style={styles.sectionLabel}>2) Program</Text>
       <View style={styles.toggleRowWrap}>
         {programs.map((program) => (
-          <TouchableOpacity
-            key={program}
-            style={[styles.filterChip, selectedProgram === program && styles.filterChipActive]}
-            onPress={() => setSelectedProgram(program)}
-          >
+          <TouchableOpacity key={program} style={[styles.filterChip, selectedProgram === program && styles.filterChipActive]} onPress={() => setSelectedProgram(program)}>
             <Text style={[styles.filterChipText, selectedProgram === program && styles.filterChipTextActive]}>{program}</Text>
           </TouchableOpacity>
         ))}
@@ -165,11 +194,7 @@ function OrderLunchScreen() {
         ))}
       </View>
 
-      <Panel
-        title="Draft Review"
-        subtitle={`${selectedChild?.firstName ?? 'Child'} • ${selectedProgram} • ${selectedDates.length} date(s) selected`}
-        badge="READY"
-      />
+      <Panel title="Draft Review" subtitle={`${selectedChild?.firstName ?? 'Child'} • ${selectedProgram} • ${selectedDates.length} date(s) selected`} badge="READY" />
       <TouchableOpacity style={styles.primaryAction}>
         <Text style={styles.primaryActionText}>Proceed to Checkout</Text>
       </TouchableOpacity>
@@ -204,11 +229,7 @@ function UpcomingOrdersScreen({ navigation }: any) {
 
       <View style={styles.toggleRowWrap}>
         {(['All', 'Editable', 'Locked'] as const).map((status) => (
-          <TouchableOpacity
-            key={status}
-            style={[styles.filterChip, statusFilter === status && styles.filterChipActive]}
-            onPress={() => setStatusFilter(status)}
-          >
+          <TouchableOpacity key={status} style={[styles.filterChip, statusFilter === status && styles.filterChipActive]} onPress={() => setStatusFilter(status)}>
             <Text style={[styles.filterChipText, statusFilter === status && styles.filterChipTextActive]}>{status}</Text>
           </TouchableOpacity>
         ))}
@@ -246,16 +267,10 @@ function UpcomingOrdersScreen({ navigation }: any) {
 
 function PastOrdersScreen() {
   const past = getPastOrders(scheduledOrders);
-
   return (
     <Screen title="Past Orders" subtitle="Completed and cancelled history.">
       {past.map((order) => (
-        <Panel
-          key={order.id}
-          title={`${order.childName} • ${formatDateLabel(order.serviceDate)}`}
-          subtitle={`${order.program} • ${order.menuItem}`}
-          badge={toUserStatus(order).toUpperCase()}
-        />
+        <Panel key={order.id} title={`${order.childName} • ${formatDateLabel(order.serviceDate)}`} subtitle={`${order.program} • ${order.menuItem}`} badge={toUserStatus(order).toUpperCase()} />
       ))}
     </Screen>
   );
@@ -280,12 +295,7 @@ function SupportScreen() {
     <Screen title="Support" subtitle="Submit requests and track replies.">
       <Panel title="Create New Request" subtitle="Order Help, Cancellation/Refund, School Question, App Issue, General" />
       {supportThreads.map((thread) => (
-        <Panel
-          key={thread.id}
-          title={thread.subject}
-          subtitle={`${thread.category} • Updated ${thread.updatedAt}`}
-          badge={thread.unread ? 'UNREAD' : 'OPEN'}
-        />
+        <Panel key={thread.id} title={thread.subject} subtitle={`${thread.category} • Updated ${thread.updatedAt}`} badge={thread.unread ? 'UNREAD' : 'OPEN'} />
       ))}
     </Screen>
   );
@@ -322,21 +332,14 @@ function SettingsScreen() {
         <Switch value={deadlineReminder} onValueChange={setDeadlineReminder} trackColor={{ true: '#C6F4A6' }} thumbColor={deadlineReminder ? '#3A63FF' : '#C5C5C5'} />
       </View>
       <Panel title="Linked Account" subtitle="Shopify customer connected" />
-      <Panel title="App Version" subtitle="0.4.0" />
+      <Panel title="App Version" subtitle="0.5.0" />
     </Screen>
   );
 }
 
 function OrderDetailScreen({ route }: any) {
   const order = scheduledOrders.find((item) => item.id === route.params.orderId);
-
-  if (!order) {
-    return (
-      <Screen title="Order Detail" subtitle="Order not found.">
-        <Panel title="Missing order" subtitle="Please go back and select another order." />
-      </Screen>
-    );
-  }
+  if (!order) return <Screen title="Order Detail" subtitle="Order not found."><Panel title="Missing order" subtitle="Please go back and select another order." /></Screen>;
 
   return (
     <Screen title="Order Detail" subtitle="Backend eligibility controls modify/cancel actions.">
@@ -352,14 +355,7 @@ function OrderDetailScreen({ route }: any) {
 
 function ChildDetailScreen({ route }: any) {
   const child = children.find((item) => item.id === route.params.childId);
-
-  if (!child) {
-    return (
-      <Screen title="Child Detail" subtitle="Child not found.">
-        <Panel title="Missing child profile" subtitle="Please return to My Family and try again." />
-      </Screen>
-    );
-  }
+  if (!child) return <Screen title="Child Detail" subtitle="Child not found."><Panel title="Missing child profile" subtitle="Please return to My Family and try again." /></Screen>;
 
   return (
     <Screen title="Child Detail" subtitle="Manage profile, school, class, and notes.">
@@ -377,14 +373,7 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          backgroundColor: byrTheme.surface,
-          borderTopColor: '#CFE0FF',
-          borderTopWidth: 1,
-          height: 72,
-          paddingBottom: 10,
-          paddingTop: 8
-        },
+        tabBarStyle: { backgroundColor: byrTheme.surface, borderTopColor: '#CFE0FF', borderTopWidth: 1, height: 72, paddingBottom: 10, paddingTop: 8 },
         tabBarActiveTintColor: byrTheme.brandSecondary,
         tabBarInactiveTintColor: '#7A89A6'
       }}
@@ -402,6 +391,11 @@ function MainTabs() {
 }
 
 export default function App() {
+  const [authStep, setAuthStep] = useState<'splash' | 'login' | 'authed'>('splash');
+
+  if (authStep === 'splash') return <SplashScreen onContinue={() => setAuthStep('login')} />;
+  if (authStep === 'login') return <LoginScreen onLogin={() => setAuthStep('authed')} />;
+
   return (
     <NavigationContainer>
       <StatusBar style="light" />
@@ -421,14 +415,49 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: byrTheme.bg
+  safeArea: { flex: 1, backgroundColor: byrTheme.bg },
+  container: { padding: 16, gap: 14, paddingBottom: 28 },
+  splashWrap: {
+    margin: 16,
+    padding: 24,
+    borderRadius: 24,
+    backgroundColor: byrTheme.brand,
+    shadowColor: '#1D2B64',
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8
   },
-  container: {
-    padding: 16,
-    gap: 14,
-    paddingBottom: 28
+  splashOrb: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 999,
+    backgroundColor: '#4D7BFF',
+    top: -70,
+    right: -50,
+    opacity: 0.4
+  },
+  splashTitle: { color: '#FFFFFF', fontSize: 34, fontWeight: '800', letterSpacing: -0.5, marginBottom: 8 },
+  splashSub: { color: '#D7E2FF', fontSize: 15, marginBottom: 22 },
+  authWrap: { padding: 16, gap: 12 },
+  inputCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: byrTheme.border,
+    padding: 14,
+    gap: 8
+  },
+  inputLabel: { color: byrTheme.muted, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
+  input: {
+    borderWidth: 1,
+    borderColor: '#C9D8FF',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: byrTheme.text,
+    backgroundColor: byrTheme.bgAlt
   },
   hero: {
     backgroundColor: byrTheme.brand,
@@ -441,43 +470,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     elevation: 8
   },
-  heroAccent: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 999,
-    backgroundColor: '#4D7BFF',
-    top: -60,
-    right: -50,
-    opacity: 0.4
-  },
-  heroKicker: {
-    textTransform: 'uppercase',
-    fontSize: 11,
-    letterSpacing: 1,
-    fontWeight: '700',
-    color: '#C9D9FF'
-  },
-  heroTitle: {
-    marginTop: 6,
-    fontSize: 30,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.4
-  },
-  heroSubtitle: {
-    marginTop: 4,
-    color: '#D7E2FF',
-    fontSize: 16
-  },
-  announcementPanel: {
-    backgroundColor: '#DDF1CF',
-    borderRadius: 20,
-    padding: 3
-  },
-  summaryRow: {
-    gap: 10
-  },
+  heroAccent: { position: 'absolute', width: 180, height: 180, borderRadius: 999, backgroundColor: '#4D7BFF', top: -60, right: -50, opacity: 0.4 },
+  heroKicker: { textTransform: 'uppercase', fontSize: 11, letterSpacing: 1, fontWeight: '700', color: '#C9D9FF' },
+  heroTitle: { marginTop: 6, fontSize: 30, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.4 },
+  heroSubtitle: { marginTop: 4, color: '#D7E2FF', fontSize: 16 },
+  announcementPanel: { backgroundColor: '#DDF1CF', borderRadius: 20, padding: 3 },
+  summaryRow: { gap: 10 },
   summaryCard: {
     backgroundColor: byrTheme.surface,
     borderRadius: 18,
@@ -490,55 +488,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 3
   },
-  summaryLabel: {
-    color: byrTheme.muted,
-    fontWeight: '700',
-    fontSize: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 1
-  },
-  summaryValue: {
-    marginTop: 6,
-    fontSize: 30,
-    color: byrTheme.brand,
-    fontWeight: '800'
-  },
-  summaryMeta: {
-    marginTop: 2,
-    color: byrTheme.muted,
-    fontSize: 13
-  },
-  pageHeader: {
-    marginBottom: 2
-  },
-  kicker: {
-    textTransform: 'uppercase',
-    fontSize: 11,
-    letterSpacing: 1,
-    fontWeight: '700',
-    color: '#5772BF',
-    marginBottom: 4
-  },
-  screenTitle: {
-    fontSize: 30,
-    fontWeight: '800',
-    color: byrTheme.text,
-    letterSpacing: -0.6
-  },
-  screenSubtitle: {
-    marginTop: 4,
-    color: byrTheme.muted,
-    fontSize: 14
-  },
-  sectionLabel: {
-    marginTop: 6,
-    marginBottom: 2,
-    fontSize: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    color: '#385CBF',
-    fontWeight: '700'
-  },
+  summaryLabel: { color: byrTheme.muted, fontWeight: '700', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 },
+  summaryValue: { marginTop: 6, fontSize: 30, color: byrTheme.brand, fontWeight: '800' },
+  summaryMeta: { marginTop: 2, color: byrTheme.muted, fontSize: 13 },
+  pageHeader: { marginBottom: 2 },
+  kicker: { textTransform: 'uppercase', fontSize: 11, letterSpacing: 1, fontWeight: '700', color: '#5772BF', marginBottom: 4 },
+  screenTitle: { fontSize: 30, fontWeight: '800', color: byrTheme.text, letterSpacing: -0.6 },
+  screenSubtitle: { marginTop: 4, color: byrTheme.muted, fontSize: 14 },
+  sectionLabel: { marginTop: 6, marginBottom: 2, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, color: '#385CBF', fontWeight: '700' },
   primaryAction: {
     borderRadius: 16,
     backgroundColor: byrTheme.brandSecondary,
@@ -550,12 +507,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
     elevation: 6
   },
-  primaryActionText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center'
-  },
+  primaryActionText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700', textAlign: 'center' },
   panel: {
     backgroundColor: byrTheme.surface,
     borderRadius: 18,
@@ -568,24 +520,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 2
   },
-  panelTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 8
-  },
-  panelTitle: {
-    color: byrTheme.text,
-    fontSize: 16,
-    fontWeight: '700',
-    flexShrink: 1
-  },
-  panelSubtitle: {
-    color: byrTheme.muted,
-    marginTop: 5,
-    fontSize: 14,
-    lineHeight: 20
-  },
+  panelTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  panelTitle: { color: byrTheme.text, fontSize: 16, fontWeight: '700', flexShrink: 1 },
+  panelSubtitle: { color: byrTheme.muted, marginTop: 5, fontSize: 14, lineHeight: 20 },
   badge: {
     backgroundColor: '#1D2B64',
     color: '#FFFFFF',
@@ -597,87 +534,21 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     overflow: 'hidden'
   },
-  datePill: {
-    borderRadius: 999,
-    backgroundColor: '#ECF2FF',
-    borderWidth: 1,
-    borderColor: '#BFD0FF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    fontSize: 12,
-    color: '#2440A4',
-    fontWeight: '700'
-  },
-  metaStatus: {
-    marginTop: 10,
-    color: '#5C9B2E',
-    fontWeight: '700',
-    fontSize: 13
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    gap: 8
-  },
-  toggleRowWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8
-  },
-  toggleButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#C6D6FF',
-    borderRadius: 14,
-    paddingVertical: 10,
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF'
-  },
-  toggleButtonActive: {
-    backgroundColor: byrTheme.brand,
-    borderColor: byrTheme.brand
-  },
-  toggleButtonText: {
-    color: byrTheme.text,
-    fontWeight: '600'
-  },
-  toggleButtonTextActive: {
-    color: '#FFFFFF'
-  },
-  filterChip: {
-    borderWidth: 1,
-    borderColor: '#C9D8FF',
-    borderRadius: 999,
-    paddingVertical: 7,
-    paddingHorizontal: 12,
-    backgroundColor: '#FFFFFF'
-  },
-  filterChipActive: {
-    borderColor: byrTheme.brandSecondary,
-    backgroundColor: '#E8EEFF'
-  },
-  filterChipText: {
-    color: '#223A8B',
-    fontSize: 13,
-    fontWeight: '600'
-  },
-  filterChipTextActive: {
-    color: '#1A2A61'
-  },
-  calendarLine: {
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#E4EBFF'
-  },
-  calendarLineText: {
-    color: byrTheme.text,
-    fontWeight: '600'
-  },
-  calendarLineMeta: {
-    marginTop: 3,
-    color: byrTheme.muted,
-    fontSize: 13
-  },
+  datePill: { borderRadius: 999, backgroundColor: '#ECF2FF', borderWidth: 1, borderColor: '#BFD0FF', paddingHorizontal: 8, paddingVertical: 4, fontSize: 12, color: '#2440A4', fontWeight: '700' },
+  metaStatus: { marginTop: 10, color: '#5C9B2E', fontWeight: '700', fontSize: 13 },
+  toggleRow: { flexDirection: 'row', gap: 8 },
+  toggleRowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  toggleButton: { flex: 1, borderWidth: 1, borderColor: '#C6D6FF', borderRadius: 14, paddingVertical: 10, alignItems: 'center', backgroundColor: '#FFFFFF' },
+  toggleButtonActive: { backgroundColor: byrTheme.brand, borderColor: byrTheme.brand },
+  toggleButtonText: { color: byrTheme.text, fontWeight: '600' },
+  toggleButtonTextActive: { color: '#FFFFFF' },
+  filterChip: { borderWidth: 1, borderColor: '#C9D8FF', borderRadius: 999, paddingVertical: 7, paddingHorizontal: 12, backgroundColor: '#FFFFFF' },
+  filterChipActive: { borderColor: byrTheme.brandSecondary, backgroundColor: '#E8EEFF' },
+  filterChipText: { color: '#223A8B', fontSize: 13, fontWeight: '600' },
+  filterChipTextActive: { color: '#1A2A61' },
+  calendarLine: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#E4EBFF' },
+  calendarLineText: { color: byrTheme.text, fontWeight: '600' },
+  calendarLineMeta: { marginTop: 3, color: byrTheme.muted, fontSize: 13 },
   settingsRow: {
     backgroundColor: byrTheme.surface,
     borderRadius: 18,
