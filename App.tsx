@@ -104,7 +104,8 @@ function Panel({ title, subtitle, badge }: { title: string; subtitle?: string; b
 function HomeScreen({ navigation }: any) {
   const { auth } = useAuth();
   const { data, loading, provider, refresh } = useAppData();
-  const upcoming = getUpcomingOrders(data.scheduledOrders);
+  const activeChildIds = new Set(data.children.filter((child) => child.active).map((child) => child.id));
+  const upcoming = getUpcomingOrders(data.scheduledOrders.filter((order) => activeChildIds.has(order.childId)));
   const nextOrder = upcoming[0];
   const unreadSupport = data.supportThreads.filter((thread) => thread.unread).length;
   const unreadNotifications = data.notificationLog.filter((item) => !item.read).length;
@@ -166,17 +167,18 @@ function HomeScreen({ navigation }: any) {
 
 function OrderLunchScreen() {
   const { data, createDraft } = useAppData();
-  const [selectedChildId, setSelectedChildId] = useState(data.children[0]?.id ?? '');
+  const activeChildren = data.children.filter((child) => child.active);
+  const [selectedChildId, setSelectedChildId] = useState(activeChildren[0]?.id ?? '');
   const [selectedProgram, setSelectedProgram] = useState(data.programs[0] ?? '');
   const [selectedDates, setSelectedDates] = useState<string[]>(data.serviceDates[0] ? [data.serviceDates[0]] : []);
   const [savedDraftId, setSavedDraftId] = useState<string | null>(null);
-  const selectedChild = data.children.find((child) => child.id === selectedChildId);
+  const selectedChild = activeChildren.find((child) => child.id === selectedChildId);
 
   useEffect(() => {
-    if (!selectedChildId && data.children[0]?.id) setSelectedChildId(data.children[0].id);
+    if (!selectedChildId && activeChildren[0]?.id) setSelectedChildId(activeChildren[0].id);
     if (!selectedProgram && data.programs[0]) setSelectedProgram(data.programs[0]);
     if (selectedDates.length === 0 && data.serviceDates[0]) setSelectedDates([data.serviceDates[0]]);
-  }, [data.children, data.programs, data.serviceDates, selectedChildId, selectedProgram, selectedDates.length]);
+  }, [activeChildren, data.programs, data.serviceDates, selectedChildId, selectedProgram, selectedDates.length]);
 
   const toggleDate = (date: string) => {
     setSelectedDates((prev) => {
@@ -189,12 +191,13 @@ function OrderLunchScreen() {
     <Screen title="Order Lunch" subtitle="Build a schedule draft before checkout.">
       <Text style={styles.sectionLabel}>1) Choose child</Text>
       <View style={styles.toggleRowWrap}>
-        {data.children.map((child) => (
+        {activeChildren.map((child) => (
           <TouchableOpacity key={child.id} style={[styles.filterChip, selectedChildId === child.id && styles.filterChipActive]} onPress={() => setSelectedChildId(child.id)}>
             <Text style={[styles.filterChipText, selectedChildId === child.id && styles.filterChipTextActive]}>{child.firstName}</Text>
           </TouchableOpacity>
         ))}
       </View>
+      {activeChildren.length === 0 ? <Panel title="No Active Children" subtitle="Please reactivate a child profile in My Family to place orders." badge="ACTION NEEDED" /> : null}
 
       <Text style={styles.sectionLabel}>2) Program</Text>
       <View style={styles.toggleRowWrap}>
@@ -242,7 +245,8 @@ function UpcomingOrdersScreen({ navigation }: any) {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Editable' | 'Locked'>('All');
 
-  const orders = getUpcomingOrders(data.scheduledOrders);
+  const activeChildIds = new Set(data.children.filter((child) => child.active).map((child) => child.id));
+  const orders = getUpcomingOrders(data.scheduledOrders.filter((order) => activeChildIds.has(order.childId)));
   const filteredOrders = orders.filter((order) => (statusFilter === 'All' ? true : order.status === statusFilter));
 
   const groupedByDate = useMemo(() => filteredOrders.reduce<Record<string, ScheduledOrderItem[]>>((acc, item) => {
@@ -294,7 +298,8 @@ function UpcomingOrdersScreen({ navigation }: any) {
 
 function PastOrdersScreen() {
   const { data } = useAppData();
-  const past = getPastOrders(data.scheduledOrders);
+  const activeChildIds = new Set(data.children.filter((child) => child.active).map((child) => child.id));
+  const past = getPastOrders(data.scheduledOrders.filter((order) => activeChildIds.has(order.childId)));
   return <Screen title="Past Orders" subtitle="Completed and cancelled history.">{past.map((order) => <Panel key={order.id} title={`${order.childName} • ${formatDateLabel(order.serviceDate)}`} subtitle={`${order.program} • ${order.menuItem}`} badge={toUserStatus(order).toUpperCase()} />)}</Screen>;
 }
 
@@ -303,7 +308,7 @@ function FamilyScreen({ navigation }: any) {
   return (
     <Screen title="My Family" subtitle="Children, school assignments, and notes.">
       {data.children.map((child) => (
-        <View key={child.id} style={styles.panel}>
+        <View key={child.id} style={[styles.panel, !child.active && styles.inactivePanel]}>
           <TouchableOpacity onPress={() => navigation.getParent()?.navigate('ChildDetail', { childId: child.id })}>
             <Text style={styles.panelTitle}>{`${child.firstName} ${child.lastName ?? ''}`.trim()}</Text>
             <Text style={styles.panelSubtitle}>{`${child.school} • ${child.classroom} • Grade ${child.grade}`}</Text>
@@ -491,6 +496,7 @@ const styles = StyleSheet.create({
   secondaryAction: { borderRadius: 12, borderWidth: 1, borderColor: '#C9D8FF', backgroundColor: '#FFFFFF', paddingVertical: 10 },
   secondaryActionText: { textAlign: 'center', color: '#3658B7', fontWeight: '700' },
   panel: { backgroundColor: byrTheme.surface, borderRadius: 18, borderWidth: 1, borderColor: byrTheme.border, padding: 14, shadowColor: '#2F4EA5', shadowOpacity: 0.06, shadowRadius: 14, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
+  inactivePanel: { opacity: 0.6 },
   panelTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   panelTitle: { color: byrTheme.text, fontSize: 16, fontWeight: '700', flexShrink: 1 },
   panelSubtitle: { color: byrTheme.muted, marginTop: 5, fontSize: 14, lineHeight: 20 },
