@@ -20,6 +20,7 @@ This repository contains a runnable Expo + React Native starter app that impleme
 - `src/auth.tsx` — lightweight auth provider/context for login + logout flow
 - `src/appData.tsx` — app-data provider/context to centralize operational data access + refresh
 - `src/data/repository.ts` + `src/data/mockRepository.ts` — repository contract and mock async data source
+- `src/data/supabaseRepository.ts` — Supabase repository placeholder for backend wiring
 - `docs/boost-your-lunch-app-blueprint.md` — product/system blueprint
 
 ## Run locally
@@ -38,3 +39,8 @@ This repository contains a runnable Expo + React Native starter app that impleme
 2. Replace mock repository with Supabase-backed repository implementation.
 3. Add Shopify checkout handoff and store returned order references.
 4. Replace mock auth context with real Supabase auth + session persistence.
+
+
+## Data provider toggle
+- Default provider: `mock`
+- Set `EXPO_PUBLIC_DATA_PROVIDER=supabase` to activate the Supabase repository path (currently scaffolded placeholder).

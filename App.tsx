@@ -102,7 +102,7 @@ function Panel({ title, subtitle, badge }: { title: string; subtitle?: string; b
 
 function HomeScreen({ navigation }: any) {
   const { auth } = useAuth();
-  const { data, loading, refresh } = useAppData();
+  const { data, loading, provider, refresh } = useAppData();
   const upcoming = getUpcomingOrders(data.scheduledOrders);
   const nextOrder = upcoming[0];
   const quickActions = ['Order Lunch', 'Upcoming Orders', 'Past Orders', 'My Family', 'Support'];
@@ -137,6 +137,7 @@ function HomeScreen({ navigation }: any) {
         <TouchableOpacity style={styles.secondaryAction} onPress={refresh}>
           <Text style={styles.secondaryActionText}>{loading ? 'Refreshing...' : 'Refresh dashboard'}</Text>
         </TouchableOpacity>
+        <Panel title="Data Provider" subtitle={provider === 'mock' ? 'Mock repository' : 'Supabase repository'} />
 
         <Text style={styles.sectionLabel}>Quick Actions</Text>
         {quickActions.map((action) => (

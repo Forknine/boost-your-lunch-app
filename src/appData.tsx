@@ -3,6 +3,7 @@ import React, { createContext, useCallback, useContext, useMemo, useState } from
 import { AppAnnouncement, ChildProfile, ScheduledOrderItem, SupportThread } from './models';
 import { DraftInput } from './data/repository';
 import { MockRepository } from './data/mockRepository';
+import { SupabaseRepository } from './data/supabaseRepository';
 
 type AppDataState = {
   announcement: AppAnnouncement;
@@ -17,11 +18,13 @@ type AppDataState = {
 type AppDataContextValue = {
   data: AppDataState;
   loading: boolean;
+  provider: 'mock' | 'supabase';
   refresh: () => Promise<void>;
   createDraft: (input: DraftInput) => Promise<{ draftId: string }>;
 };
 
-const repo = new MockRepository();
+const provider = process.env.EXPO_PUBLIC_DATA_PROVIDER === 'supabase' ? 'supabase' : 'mock';
+const repo = provider === 'supabase' ? new SupabaseRepository() : new MockRepository();
 
 const seedData: AppDataState = {
   announcement: { id: 'boot', title: 'Loading announcement', body: 'Please wait...' },
@@ -51,7 +54,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<AppDataContextValue>(
-    () => ({ data, loading, refresh, createDraft }),
+    () => ({ data, loading, provider, refresh, createDraft }),
     [data, loading, refresh, createDraft]
   );
 
