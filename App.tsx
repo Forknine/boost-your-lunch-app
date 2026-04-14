@@ -21,22 +21,47 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
 const byrTheme = {
-  bg: '#EDF3FF',
-  bgAlt: '#F8FBFF',
+  bg: '#DFF1FF',
+  bgAlt: '#EAF6FF',
   surface: '#FFFFFF',
-  text: '#10182E',
-  muted: '#56607A',
-  border: '#D9E4FF',
-  brand: '#1D2B64',
-  brandSecondary: '#3A63FF',
-  highlight: '#90E86A'
+  text: '#0D2D63',
+  muted: '#3A73AD',
+  border: '#B9DCFF',
+  brand: '#1F77CC',
+  brandSecondary: '#38A9E8',
+  highlight: '#FFD24A'
 };
+
+function BrandLogo({ size = 76 }: { size?: number }) {
+  return (
+    <View style={[styles.logoCircle, { width: size, height: size, borderRadius: size / 2 }]}>
+      <Text style={[styles.logoTop, { fontSize: Math.max(10, size * 0.12) }]}>BOOST</Text>
+      <Text style={{ fontSize: Math.max(18, size * 0.26) }}>🍗🥤🥪</Text>
+      <Text style={[styles.logoBottom, { fontSize: Math.max(10, size * 0.1) }]}>YOUR LUNCH</Text>
+    </View>
+  );
+}
+
+function BrandHeader() {
+  return (
+    <View style={styles.brandHeader}>
+      <View style={styles.brandHeaderGlowLeft} />
+      <View style={styles.brandHeaderGlowRight} />
+      <BrandLogo size={80} />
+      <View style={styles.brandHeaderTextWrap}>
+        <Text style={styles.brandHeaderTitle}>BOOST YOUR LUNCH</Text>
+        <Text style={styles.brandHeaderSubtitle}>NEW Calendar Ordering • Elementary • High Schools</Text>
+      </View>
+    </View>
+  );
+}
 
 function SplashScreen({ onContinue }: { onContinue: () => void }) {
   return (
     <SafeAreaView style={[styles.safeArea, { justifyContent: 'center' }]}> 
       <View style={styles.splashWrap}>
         <View style={styles.splashOrb} />
+        <BrandLogo size={112} />
         <Text style={styles.splashTitle}>Boost Your Lunch</Text>
         <Text style={styles.splashSub}>Fast ordering for families, schools, and programs.</Text>
         <TouchableOpacity style={styles.primaryAction} onPress={onContinue}>
@@ -114,6 +139,7 @@ function HomeScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
+        <BrandHeader />
         <View style={styles.hero}>
           <View style={styles.heroAccent} />
           <Text style={styles.heroKicker}>Serving students everywhere</Text>
@@ -521,20 +547,29 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: byrTheme.bg },
   container: { padding: 16, gap: 14, paddingBottom: 28 },
-  splashWrap: { margin: 16, padding: 24, borderRadius: 24, backgroundColor: byrTheme.brand, shadowColor: '#1D2B64', shadowOpacity: 0.35, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 8 },
-  splashOrb: { position: 'absolute', width: 180, height: 180, borderRadius: 999, backgroundColor: '#4D7BFF', top: -70, right: -50, opacity: 0.4 },
+  splashWrap: { margin: 16, padding: 24, borderRadius: 24, backgroundColor: byrTheme.brand, shadowColor: '#155697', shadowOpacity: 0.3, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 8, alignItems: 'center', gap: 10 },
+  splashOrb: { position: 'absolute', width: 220, height: 220, borderRadius: 999, backgroundColor: '#49C4F3', top: -80, right: -50, opacity: 0.4 },
   splashTitle: { color: '#FFFFFF', fontSize: 34, fontWeight: '800', letterSpacing: -0.5, marginBottom: 8 },
-  splashSub: { color: '#D7E2FF', fontSize: 15, marginBottom: 22 },
+  splashSub: { color: '#E7F5FF', fontSize: 15, marginBottom: 22, textAlign: 'center' },
+  logoCircle: { backgroundColor: '#2F83D5', borderWidth: 4, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', gap: 3, shadowColor: '#0E3E7A', shadowOpacity: 0.28, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 5 },
+  logoTop: { color: '#FFFFFF', fontWeight: '800', letterSpacing: 1 },
+  logoBottom: { color: '#EAF5FF', fontWeight: '700', letterSpacing: 0.7 },
+  brandHeader: { backgroundColor: '#34A8E6', borderRadius: 22, borderWidth: 1, borderColor: '#79CAEE', padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12, overflow: 'hidden' },
+  brandHeaderGlowLeft: { position: 'absolute', width: 160, height: 160, borderRadius: 999, backgroundColor: '#87D9F8', left: -70, top: -35, opacity: 0.45 },
+  brandHeaderGlowRight: { position: 'absolute', width: 200, height: 200, borderRadius: 999, backgroundColor: '#1E81D4', right: -80, top: -85, opacity: 0.35 },
+  brandHeaderTextWrap: { flex: 1 },
+  brandHeaderTitle: { color: '#FFFFFF', fontSize: 26, fontWeight: '900', letterSpacing: 0.2 },
+  brandHeaderSubtitle: { color: '#E8F7FF', marginTop: 4, fontSize: 12, fontWeight: '600' },
   authWrap: { padding: 16, gap: 12 },
   inputCard: { backgroundColor: '#FFFFFF', borderRadius: 18, borderWidth: 1, borderColor: byrTheme.border, padding: 14, gap: 8 },
   inputLabel: { color: byrTheme.muted, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
   input: { borderWidth: 1, borderColor: '#C9D8FF', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, color: byrTheme.text, backgroundColor: byrTheme.bgAlt },
   multilineInput: { minHeight: 70, textAlignVertical: 'top' },
-  hero: { backgroundColor: byrTheme.brand, borderRadius: 24, padding: 18, overflow: 'hidden', shadowColor: '#1D2B64', shadowOpacity: 0.32, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 8 },
-  heroAccent: { position: 'absolute', width: 180, height: 180, borderRadius: 999, backgroundColor: '#4D7BFF', top: -60, right: -50, opacity: 0.4 },
-  heroKicker: { textTransform: 'uppercase', fontSize: 11, letterSpacing: 1, fontWeight: '700', color: '#C9D9FF' },
+  hero: { backgroundColor: '#2B90D8', borderRadius: 24, padding: 18, overflow: 'hidden', shadowColor: '#155697', shadowOpacity: 0.3, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 8 },
+  heroAccent: { position: 'absolute', width: 220, height: 220, borderRadius: 999, backgroundColor: '#57C2EE', top: -65, right: -55, opacity: 0.45 },
+  heroKicker: { textTransform: 'uppercase', fontSize: 11, letterSpacing: 1, fontWeight: '700', color: '#E2F6FF' },
   heroTitle: { marginTop: 6, fontSize: 30, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.4 },
-  heroSubtitle: { marginTop: 4, color: '#D7E2FF', fontSize: 16 },
+  heroSubtitle: { marginTop: 4, color: '#F1FBFF', fontSize: 16 },
   announcementPanel: { backgroundColor: '#DDF1CF', borderRadius: 20, padding: 3 },
   summaryRow: { gap: 10 },
   summaryCard: { backgroundColor: byrTheme.surface, borderRadius: 18, borderWidth: 1, borderColor: byrTheme.border, padding: 14, shadowColor: '#2E4FAE', shadowOpacity: 0.08, shadowRadius: 14, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
