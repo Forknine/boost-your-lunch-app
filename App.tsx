@@ -376,6 +376,8 @@ function SupportScreen() {
   const [category, setCategory] = useState<SupportThreadInput['category']>('Order Help');
   const [subject, setSubject] = useState('');
   const [confirmation, setConfirmation] = useState<string | null>(null);
+  const trimmedSubject = subject.trim();
+  const canSubmit = trimmedSubject.length >= 8;
 
   return (
     <Screen title="Support" subtitle="Submit requests and track replies.">
@@ -391,21 +393,27 @@ function SupportScreen() {
         <Text style={styles.inputLabel}>Subject</Text>
         <TextInput
           value={subject}
-          onChangeText={setSubject}
+          onChangeText={(value) => {
+            setSubject(value);
+            if (confirmation) setConfirmation(null);
+          }}
           placeholder="Briefly describe the issue"
           placeholderTextColor="#8EA1CE"
           style={styles.input}
+          maxLength={120}
         />
+        <Text style={styles.panelSubtitle}>{`${trimmedSubject.length}/120 characters`}</Text>
         <TouchableOpacity
-          style={styles.primaryAction}
+          style={[styles.primaryAction, !canSubmit && styles.disabledAction]}
+          disabled={!canSubmit}
           onPress={async () => {
-            if (!subject.trim()) return;
-            const created = await createSupportThread({ category, subject: subject.trim() });
+            if (!canSubmit) return;
+            const created = await createSupportThread({ category, subject: trimmedSubject });
             setConfirmation(`Created ticket ${created.threadId}`);
             setSubject('');
           }}
         >
-          <Text style={styles.primaryActionText}>Create Support Request</Text>
+          <Text style={styles.primaryActionText}>{canSubmit ? 'Create Support Request' : 'Enter at least 8 characters'}</Text>
         </TouchableOpacity>
       </View>
       {confirmation ? <Panel title="Support Created" subtitle={confirmation} badge="SUCCESS" /> : null}
