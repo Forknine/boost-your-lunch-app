@@ -172,6 +172,7 @@ function OrderLunchScreen() {
   const [selectedProgram, setSelectedProgram] = useState(data.programs[0] ?? '');
   const [selectedDates, setSelectedDates] = useState<string[]>(data.serviceDates[0] ? [data.serviceDates[0]] : []);
   const [savedDraftId, setSavedDraftId] = useState<string | null>(null);
+  const [checkoutMessage, setCheckoutMessage] = useState<string | null>(null);
   const selectedChild = activeChildren.find((child) => child.id === selectedChildId);
 
   useEffect(() => {
@@ -179,6 +180,11 @@ function OrderLunchScreen() {
     if (!selectedProgram && data.programs[0]) setSelectedProgram(data.programs[0]);
     if (selectedDates.length === 0 && data.serviceDates[0]) setSelectedDates([data.serviceDates[0]]);
   }, [activeChildren, data.programs, data.serviceDates, selectedChildId, selectedProgram, selectedDates.length]);
+
+  useEffect(() => {
+    setSavedDraftId(null);
+    setCheckoutMessage(null);
+  }, [selectedChildId, selectedProgram, selectedDates.join('|')]);
 
   const toggleDate = (date: string) => {
     setSelectedDates((prev) => {
@@ -219,6 +225,7 @@ function OrderLunchScreen() {
 
       <Panel title="Draft Review" subtitle={`${selectedChild?.firstName ?? 'Child'} • ${selectedProgram || 'Program'} • ${selectedDates.length} date(s) selected`} badge="READY" />
       {savedDraftId ? <Panel title="Draft Saved" subtitle={`Saved as ${savedDraftId}`} badge="SAVED" /> : null}
+      {checkoutMessage ? <Panel title="Checkout Ready" subtitle={checkoutMessage} badge="NEXT STEP" /> : null}
       <TouchableOpacity
         style={styles.primaryAction}
         onPress={async () => {
@@ -233,7 +240,14 @@ function OrderLunchScreen() {
       >
         <Text style={styles.primaryActionText}>Save Draft</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.secondaryAction}>
+      <TouchableOpacity
+        style={[styles.secondaryAction, !savedDraftId && styles.disabledAction]}
+        disabled={!savedDraftId}
+        onPress={() => {
+          if (!savedDraftId) return;
+          setCheckoutMessage(`Draft ${savedDraftId} is ready for payment and final review.`);
+        }}
+      >
         <Text style={styles.secondaryActionText}>Proceed to Checkout</Text>
       </TouchableOpacity>
     </Screen>
