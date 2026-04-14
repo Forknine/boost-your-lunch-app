@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import { ScheduledOrderItem } from './src/models';
@@ -21,24 +21,29 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
 const byrTheme = {
-  bg: '#DFF1FF',
-  bgAlt: '#EAF6FF',
+  bg: '#CBEAFF',
+  bgAlt: '#E6F6FF',
   surface: '#FFFFFF',
-  text: '#0D2D63',
-  muted: '#3A73AD',
-  border: '#B9DCFF',
-  brand: '#1F77CC',
-  brandSecondary: '#38A9E8',
-  highlight: '#FFD24A'
+  text: '#0A2E58',
+  muted: '#336999',
+  border: '#A8D7FA',
+  brand: '#007BC3',
+  brandSecondary: '#16A5E0',
+  highlight: '#FFD248'
 };
 
 function BrandLogo({ size = 76 }: { size?: number }) {
   return (
-    <View style={[styles.logoCircle, { width: size, height: size, borderRadius: size / 2 }]}>
-      <Text style={[styles.logoTop, { fontSize: Math.max(10, size * 0.12) }]}>BOOST</Text>
-      <Text style={{ fontSize: Math.max(18, size * 0.26) }}>🍗🥤🥪</Text>
-      <Text style={[styles.logoBottom, { fontSize: Math.max(10, size * 0.1) }]}>YOUR LUNCH</Text>
-    </View>
+    <Image source={require('./assets/byl-logo.png')} style={{ width: size, height: size }} resizeMode="contain" />
+  );
+}
+
+function AppBackground({ children }: { children: React.ReactNode }) {
+  return (
+    <ImageBackground source={require('./assets/byl-header.png')} style={styles.appBackground} imageStyle={styles.appBackgroundImage}>
+      <View style={styles.appBackgroundOverlay} />
+      {children}
+    </ImageBackground>
   );
 }
 
@@ -548,19 +553,19 @@ function Root() {
 }
 
 export default function App() {
-  return <AuthProvider><AppDataProvider><Root /></AppDataProvider></AuthProvider>;
+  return <AuthProvider><AppDataProvider><AppBackground><Root /></AppBackground></AppDataProvider></AuthProvider>;
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: byrTheme.bg },
+  appBackground: { flex: 1, backgroundColor: byrTheme.bg },
+  appBackgroundImage: { opacity: 0.35 },
+  appBackgroundOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(203,234,255,0.84)' },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   container: { padding: 16, gap: 14, paddingBottom: 28 },
   splashWrap: { margin: 16, padding: 24, borderRadius: 24, backgroundColor: byrTheme.brand, shadowColor: '#155697', shadowOpacity: 0.3, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 8, alignItems: 'center', gap: 10 },
   splashOrb: { position: 'absolute', width: 220, height: 220, borderRadius: 999, backgroundColor: '#49C4F3', top: -80, right: -50, opacity: 0.4 },
   splashTitle: { color: '#FFFFFF', fontSize: 34, fontWeight: '800', letterSpacing: -0.5, marginBottom: 8 },
   splashSub: { color: '#E7F5FF', fontSize: 15, marginBottom: 22, textAlign: 'center' },
-  logoCircle: { backgroundColor: '#2F83D5', borderWidth: 4, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', gap: 3, shadowColor: '#0E3E7A', shadowOpacity: 0.28, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 5 },
-  logoTop: { color: '#FFFFFF', fontWeight: '800', letterSpacing: 1 },
-  logoBottom: { color: '#EAF5FF', fontWeight: '700', letterSpacing: 0.7 },
   brandHeader: { backgroundColor: '#34A8E6', borderRadius: 22, borderWidth: 1, borderColor: '#79CAEE', padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12, overflow: 'hidden' },
   brandHeaderGlowLeft: { position: 'absolute', width: 160, height: 160, borderRadius: 999, backgroundColor: '#87D9F8', left: -70, top: -35, opacity: 0.45 },
   brandHeaderGlowRight: { position: 'absolute', width: 200, height: 200, borderRadius: 999, backgroundColor: '#1E81D4', right: -80, top: -85, opacity: 0.35 },
