@@ -103,6 +103,13 @@ function Screen({ title, subtitle, children }: { title: string; subtitle?: strin
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.screenBrandRow}>
+          <BrandLogo size={52} />
+          <View style={styles.screenBrandTextWrap}>
+            <Text style={styles.screenBrandTitle}>BOOST YOUR LUNCH</Text>
+            <Text style={styles.screenBrandTagline}>Serving students everywhere</Text>
+          </View>
+        </View>
         <View style={styles.pageHeader}>
           <Text style={styles.kicker}>Boost Your Lunch</Text>
           <Text style={styles.screenTitle}>{title}</Text>
@@ -576,6 +583,10 @@ const styles = StyleSheet.create({
   summaryLabel: { color: byrTheme.muted, fontWeight: '700', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 },
   summaryValue: { marginTop: 6, fontSize: 30, color: byrTheme.brand, fontWeight: '800' },
   summaryMeta: { marginTop: 2, color: byrTheme.muted, fontSize: 13 },
+  screenBrandRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#EBF7FF', borderRadius: 18, borderWidth: 1, borderColor: '#C5E8FF', padding: 10 },
+  screenBrandTextWrap: { flex: 1 },
+  screenBrandTitle: { color: '#227BCB', fontWeight: '800', fontSize: 16, letterSpacing: 0.4 },
+  screenBrandTagline: { color: '#4A8EC7', fontSize: 12, marginTop: 1 },
   pageHeader: { marginBottom: 2 },
   kicker: { textTransform: 'uppercase', fontSize: 11, letterSpacing: 1, fontWeight: '700', color: '#5772BF', marginBottom: 4 },
   screenTitle: { fontSize: 30, fontWeight: '800', color: byrTheme.text, letterSpacing: -0.6 },
