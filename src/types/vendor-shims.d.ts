@@ -1,4 +1,5 @@
 declare const process: { env: Record<string, string | undefined> };
+declare function require(moduleName: string): any;
 
 declare module 'react' {
   export type ReactNode = any;
@@ -21,6 +22,7 @@ declare namespace React {
 }
 
 declare module 'react-native' {
+  export const Image: any;
   export const SafeAreaView: any;
   export const ScrollView: any;
   export const StatusBar: any;
