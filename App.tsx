@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import { ScheduledOrderItem } from './src/models';
@@ -20,6 +20,9 @@ type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
+const brandLogoImage = require('./assets/byl-logo.png');
+const brandHeaderImage = require('./assets/byl-header.png');
+
 const byrTheme = {
   bg: '#DFF1FF',
   bgAlt: '#EAF6FF',
@@ -34,24 +37,19 @@ const byrTheme = {
 
 function BrandLogo({ size = 76 }: { size?: number }) {
   return (
-    <View style={[styles.logoCircle, { width: size, height: size, borderRadius: size / 2 }]}>
-      <Text style={[styles.logoTop, { fontSize: Math.max(10, size * 0.12) }]}>BOOST</Text>
-      <Text style={{ fontSize: Math.max(18, size * 0.26) }}>🍗🥤🥪</Text>
-      <Text style={[styles.logoBottom, { fontSize: Math.max(10, size * 0.1) }]}>YOUR LUNCH</Text>
-    </View>
+    <Image
+      source={brandLogoImage}
+      accessibilityLabel="Boost Your Lunch logo"
+      resizeMode="contain"
+      style={[styles.logoImage, { width: size, height: size, borderRadius: size / 2 }]}
+    />
   );
 }
 
 function BrandHeader() {
   return (
     <View style={styles.brandHeader}>
-      <View style={styles.brandHeaderGlowLeft} />
-      <View style={styles.brandHeaderGlowRight} />
-      <BrandLogo size={80} />
-      <View style={styles.brandHeaderTextWrap}>
-        <Text style={styles.brandHeaderTitle}>BOOST YOUR LUNCH</Text>
-        <Text style={styles.brandHeaderSubtitle}>NEW Calendar Ordering • Elementary • High Schools</Text>
-      </View>
+      <Image source={brandHeaderImage} accessibilityLabel="Boost Your Lunch banner" resizeMode="cover" style={styles.brandHeaderImage} />
     </View>
   );
 }
@@ -61,6 +59,7 @@ function SplashScreen({ onContinue }: { onContinue: () => void }) {
     <SafeAreaView style={[styles.safeArea, { justifyContent: 'center' }]}> 
       <View style={styles.splashWrap}>
         <View style={styles.splashOrb} />
+        <Image source={brandHeaderImage} accessibilityLabel="Boost Your Lunch banner" resizeMode="cover" style={styles.splashHeaderImage} />
         <BrandLogo size={112} />
         <Text style={styles.splashTitle}>Boost Your Lunch</Text>
         <Text style={styles.splashSub}>Fast ordering for families, schools, and programs.</Text>
@@ -554,19 +553,14 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: byrTheme.bg },
   container: { padding: 16, gap: 14, paddingBottom: 28 },
-  splashWrap: { margin: 16, padding: 24, borderRadius: 24, backgroundColor: byrTheme.brand, shadowColor: '#155697', shadowOpacity: 0.3, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 8, alignItems: 'center', gap: 10 },
+  splashWrap: { margin: 16, padding: 24, borderRadius: 24, backgroundColor: byrTheme.brand, shadowColor: '#155697', shadowOpacity: 0.3, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 8, alignItems: 'center', gap: 10, overflow: 'hidden' },
   splashOrb: { position: 'absolute', width: 220, height: 220, borderRadius: 999, backgroundColor: '#49C4F3', top: -80, right: -50, opacity: 0.4 },
+  splashHeaderImage: { alignSelf: 'stretch', height: 118, marginHorizontal: -24, marginTop: -24, marginBottom: 10 },
   splashTitle: { color: '#FFFFFF', fontSize: 34, fontWeight: '800', letterSpacing: -0.5, marginBottom: 8 },
   splashSub: { color: '#E7F5FF', fontSize: 15, marginBottom: 22, textAlign: 'center' },
-  logoCircle: { backgroundColor: '#2F83D5', borderWidth: 4, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', gap: 3, shadowColor: '#0E3E7A', shadowOpacity: 0.28, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 5 },
-  logoTop: { color: '#FFFFFF', fontWeight: '800', letterSpacing: 1 },
-  logoBottom: { color: '#EAF5FF', fontWeight: '700', letterSpacing: 0.7 },
-  brandHeader: { backgroundColor: '#34A8E6', borderRadius: 22, borderWidth: 1, borderColor: '#79CAEE', padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12, overflow: 'hidden' },
-  brandHeaderGlowLeft: { position: 'absolute', width: 160, height: 160, borderRadius: 999, backgroundColor: '#87D9F8', left: -70, top: -35, opacity: 0.45 },
-  brandHeaderGlowRight: { position: 'absolute', width: 200, height: 200, borderRadius: 999, backgroundColor: '#1E81D4', right: -80, top: -85, opacity: 0.35 },
-  brandHeaderTextWrap: { flex: 1 },
-  brandHeaderTitle: { color: '#FFFFFF', fontSize: 26, fontWeight: '900', letterSpacing: 0.2 },
-  brandHeaderSubtitle: { color: '#E8F7FF', marginTop: 4, fontSize: 12, fontWeight: '600' },
+  logoImage: { shadowColor: '#0E3E7A', shadowOpacity: 0.28, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 5 },
+  brandHeader: { backgroundColor: '#34A8E6', borderRadius: 22, borderWidth: 1, borderColor: '#79CAEE', height: 136, overflow: 'hidden' },
+  brandHeaderImage: { width: '100%', height: '100%' },
   authWrap: { padding: 16, gap: 12 },
   inputCard: { backgroundColor: '#FFFFFF', borderRadius: 18, borderWidth: 1, borderColor: byrTheme.border, padding: 14, gap: 8 },
   inputLabel: { color: byrTheme.muted, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
